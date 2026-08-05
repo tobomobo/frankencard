@@ -150,6 +150,29 @@ cd ../external/micropython/ports/unix && \
 cd stm32 && make -f MK-Makefile setup && make -f MK-Makefile   # or Q1-Makefile
 ```
 
+## Hardware coverage
+
+| Target | Build | Status |
+|---|---|---|
+| **Mk4 / Mk5** | `stm32/MK-Makefile` (`BOARD=COLDCARD_MK4`, `HW_MODEL=mk`) | builds, `rng-code-check` passes, simulator boots as `--mk4` and `--mk5` |
+| **Q** | `stm32/Q1-Makefile` | builds, `rng-code-check` passes, simulator boots as `--q1` |
+| **Mk3** | *none on `master`* | **untested, unbuilt** |
+
+Mk4 and Mk5 are one firmware image — upstream's README says a build for Mk5
+"supports the Mk4 without any functional differences" — so they are covered by
+the same verification, and `--mk5` is the simulator's default.
+
+**Mk3 is not covered.** `stm32/COLDCARD/` (the Mk3 board) had its
+`USER_C_MODULES` and `MICROPY_PY_URANDOM` lines changed alongside the others for
+consistency, but **no makefile on `master` builds `BOARD=COLDCARD`** — Mk3
+firmware lives on the `v4-legacy` branch, which is where its RNG fix and the
+4.2.0 release in Coinkite's advisory come from. Those two edits are therefore
+inert here and have never been compiled. Anyone reviving Mk3 or cherry-picking to
+`v4-legacy` must build and re-verify it from scratch.
+
+(Commit `31026cc3`'s message claims Mk3 is covered. It is wrong; this table is
+correct.)
+
 ## Known gaps
 
 - **Never run on real hardware.**

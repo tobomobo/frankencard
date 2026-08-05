@@ -118,9 +118,13 @@ Only the non-obvious parts:
 - `shared/manifest.py`, `manifest_mk4.py`, `manifest_q1.py` — which files get
   frozen into which hardware build. A new file in `shared/` does nothing until
   it is listed in a manifest.
-- `stm32/` — ARM build. `MK-Makefile` (Mk4/Mk5), `Q1-Makefile` (Q). Plain
-  `stm32/Makefile` is a convenience shim; it builds a **debug Mk** build
-  (`DEBUG_BUILD=1 -f MK-Makefile`), despite its own header comment claiming Q1.
+- `stm32/` — ARM build. `MK-Makefile` (Mk4 **and** Mk5 — one image), `Q1-Makefile`
+  (Q). Plain `stm32/Makefile` is a convenience shim; it builds a **debug Mk**
+  build (`DEBUG_BUILD=1 -f MK-Makefile`), despite its own header claiming Q1.
+  **Nothing on `master` builds Mk3** (`BOARD=COLDCARD`) — that lives on
+  `v4-legacy`. The `stm32/COLDCARD/` edits in this fork are inert and unverified;
+  do not claim Mk3 support. See the coverage table in
+  [TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md).
 - `unix/` — desktop simulator, builds the same `shared/` code against
   micropython's unix port.
 - `external/libngu` — Coinkite's crypto library. **No longer compiled into
