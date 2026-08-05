@@ -1,3 +1,26 @@
+> ## ⚠️ UNOFFICIAL HOBBY FORK — DO NOT USE WITH REAL FUNDS
+>
+> This fork replaces COLDCARD's crypto library (`libngu`) with
+> [trezor-crypto](https://github.com/trezor/trezor-firmware/tree/master/crypto).
+> It is an **unaudited experiment by a hobbyist**.
+>
+> **It can permanently brick your COLDCARD and it can lose your bitcoin.**
+> Custom firmware that crashes before login completes is unrecoverable, and a
+> subtle flaw in key generation or signing is invisible until the money is gone.
+> None of this has ever run on physical hardware.
+>
+> **Not affiliated with, endorsed by, or reviewed by Coinkite Inc. or
+> SatoshiLabs.** Do not report issues with this fork to either company.
+>
+> Read **[DISCLAIMER.md](DISCLAIMER.md)** before going further. For what was
+> changed and why, see **[TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md)**.
+>
+> Reproducible builds from this tree will **not** match Coinkite's official
+> binaries — that is expected for a fork, and it means you cannot verify a
+> device against upstream after flashing this.
+
+---
+
 # COLDCARD Hardware Wallet
 
 Coldcard is an Affordable, Ultra-secure & Verifiable Hardware Wallet for Bitcoin.

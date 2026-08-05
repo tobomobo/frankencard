@@ -1,3 +1,22 @@
+> ## Note for this fork
+>
+> This is an **unofficial hobby fork** — read [DISCLAIMER.md](DISCLAIMER.md).
+>
+> **There is no CLA for contributions to this fork.** You keep your copyright and
+> license your change under the same terms as the file you edit. The CLA below is
+> Coinkite's, preserved because it *does* apply if you take a change upstream to
+> [Coldcard/firmware](https://github.com/Coldcard/firmware).
+>
+> Two expectations for changes touching crypto:
+> 1. `external/c-modules-trezor/difftest.py` and `errtest.py` must stay green — a
+>    new divergence from libngu is a finding to explain, not a diff to accept.
+> 2. Mark deliberate differences in the source with a `DIVERGENCE:` comment.
+>    Silent behaviour changes in a wallet are how people lose money.
+>
+> Please do not open issues with Coinkite or SatoshiLabs about this fork.
+
+---
+
 ## Individual Contributor License Agreement (CLA)
 
 **Thank you for submitting your contributions to this project.**
