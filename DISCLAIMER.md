@@ -1,6 +1,10 @@
 # Disclaimer
 
-## This is a hobby project. It can brick your device and lose your money.
+## FRANKENCARD is a hobby project. It can brick your device and lose your money.
+
+It is called Frankencard because it is a crypto-library transplant between two
+hardware wallets. That is a joke about the code, not about the risk — the risk
+below is real and none of it is exaggerated for effect.
 
 This is an unofficial, unaudited experiment by a hobbyist. It replaces the
 cryptographic library inside COLDCARD firmware. Cryptographic code is exactly

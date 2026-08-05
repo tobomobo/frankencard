@@ -1,6 +1,7 @@
 > ## Note for this fork
 >
-> This is an **unofficial hobby fork** — read [DISCLAIMER.md](DISCLAIMER.md).
+> This is **FRANKENCARD**, an unofficial hobby fork — read
+> [DISCLAIMER.md](DISCLAIMER.md).
 >
 > **There is no CLA for contributions to this fork.** You keep your copyright and
 > license your change under the same terms as the file you edit. The CLA below is

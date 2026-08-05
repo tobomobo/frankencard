@@ -1,7 +1,16 @@
-# The trezor-crypto backend
+# FRANKENCARD — the trezor-crypto backend
 
 > Read [DISCLAIMER.md](DISCLAIMER.md) first. This is a hobby project that can
 > brick devices and lose funds.
+
+## Why "Frankencard"
+
+Because that is what it is: the crypto organ of one hardware wallet transplanted
+into another, stitched up and jolted alive. Naming it anything more respectable
+would imply a level of assurance this does not have.
+
+The joke is load-bearing. If a name like "Coldvault" made you feel safe flashing
+it, the name would be lying. This one tells you what you are dealing with.
 
 ## What this is
 

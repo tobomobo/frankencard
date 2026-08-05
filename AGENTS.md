@@ -1,10 +1,14 @@
-# Agent instructions — Coldcard firmware, trezor-crypto fork
+# Agent instructions — FRANKENCARD
 
 ## What this repo is
 
-An **unofficial hobby fork** of Coinkite's `Coldcard/firmware` that replaces the
-crypto library `libngu` with **trezor-crypto**. Work happens on
+**FRANKENCARD**: an **unofficial hobby fork** of Coinkite's `Coldcard/firmware`
+that replaces the crypto library `libngu` with **trezor-crypto**. Work happens on
 `trezor-crypto-backend`; `master` tracks upstream.
+
+The name is deliberate and the tone is part of the safety story — it signals a
+transplant held together with stitches, not a product. Keep that register: do not
+smooth the docs into sounding like assured, shippable firmware.
 
 Read [TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md) for what changed and
 why, and [DISCLAIMER.md](DISCLAIMER.md) for the risk posture. Two things follow

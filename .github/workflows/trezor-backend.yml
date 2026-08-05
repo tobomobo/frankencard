@@ -1,4 +1,4 @@
-name: trezor-crypto backend
+name: frankencard
 
 # Builds both interpreters -- libngu-backed and trezor-crypto-backed -- and
 # requires their crypto output to be byte-identical. That equivalence is the

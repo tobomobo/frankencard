@@ -1,8 +1,16 @@
+> # 🧟 FRANKENCARD
+>
+> ### *Two wallets. One of them didn't consent.*
+>
 > ## ⚠️ UNOFFICIAL HOBBY FORK — DO NOT USE WITH REAL FUNDS
 >
-> This fork replaces COLDCARD's crypto library (`libngu`) with
-> [trezor-crypto](https://github.com/trezor/trezor-firmware/tree/master/crypto).
-> It is an **unaudited experiment by a hobbyist**.
+> COLDCARD firmware with its crypto library (`libngu`) cut out and
+> [trezor-crypto](https://github.com/trezor/trezor-firmware/tree/master/crypto)
+> stitched in its place. An **unaudited experiment by a hobbyist**.
+>
+> The name is the honest description: this is an organ transplant between two
+> hardware wallets, sewn up and jolted alive. It boots. It passes its tests. It
+> has never touched real hardware.
 >
 > **It can permanently brick your COLDCARD and it can lose your bitcoin.**
 > Custom firmware that crashes before login completes is unrecoverable, and a
