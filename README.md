@@ -1,33 +1,126 @@
-> # 🧟 FRANKENCARD
+# 🧟 FRANKENCARD
+
+### *Two wallets. One of them didn't consent.*
+
+[![frankencard](https://github.com/tobomobo/frankencard/actions/workflows/trezor-backend.yml/badge.svg)](https://github.com/tobomobo/frankencard/actions/workflows/trezor-backend.yml)
+
+COLDCARD firmware with its crypto library (`libngu`) cut out and
+[trezor-crypto](https://github.com/trezor/trezor-firmware/tree/master/crypto)
+stitched in its place. An organ transplant between two hardware wallets, sewn up
+and jolted alive.
+
+> ## ⚠️ DO NOT USE WITH REAL FUNDS
 >
-> ### *Two wallets. One of them didn't consent.*
+> **This is an unaudited hobby project. It can permanently brick your COLDCARD
+> and it can lose your bitcoin.** Custom firmware that crashes before the login
+> sequence completes is unrecoverable, and a subtle flaw in key generation or
+> signing is invisible until the money is already gone.
 >
-> ## ⚠️ UNOFFICIAL HOBBY FORK — DO NOT USE WITH REAL FUNDS
->
-> COLDCARD firmware with its crypto library (`libngu`) cut out and
-> [trezor-crypto](https://github.com/trezor/trezor-firmware/tree/master/crypto)
-> stitched in its place. An **unaudited experiment by a hobbyist**.
->
-> The name is the honest description: this is an organ transplant between two
-> hardware wallets, sewn up and jolted alive. It boots. It passes its tests. It
-> has never touched real hardware.
->
-> **It can permanently brick your COLDCARD and it can lose your bitcoin.**
-> Custom firmware that crashes before login completes is unrecoverable, and a
-> subtle flaw in key generation or signing is invisible until the money is gone.
-> None of this has ever run on physical hardware.
+> **It has never run on physical hardware.** Everything verified so far was
+> verified in the desktop simulator.
 >
 > **Not affiliated with, endorsed by, or reviewed by Coinkite Inc. or
 > SatoshiLabs.** Do not report issues with this fork to either company.
 >
-> Read **[DISCLAIMER.md](DISCLAIMER.md)** before going further. For what was
-> changed and why, see **[TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md)**.
->
-> Reproducible builds from this tree will **not** match Coinkite's official
-> binaries — that is expected for a fork, and it means you cannot verify a
-> device against upstream after flashing this.
+> Read **[DISCLAIMER.md](DISCLAIMER.md)** before going any further.
+
+## Why
+
+COLDCARD v4.0.0–6.5.1 had a low-entropy defect: `ngu.random` produced every byte
+as `CHIP_TRNG_32() ^ yasmarang()`, and `CHIP_TRNG_32()` resolved to *another*
+software PRNG because the board file exported `random_buffer()` — trezor-crypto's
+hook shape — but never exported the `rng_get` symbol libngu expected. Two chained
+PRNGs, no hardware entropy, ~40 bits of seed on Mk3.
+
+**Coinkite fixed it** (`ca724637`, 2026-07-31) and shipped a build-time assertion
+with it. Current official firmware is not affected. This is an architecture
+experiment, not a warning about their product.
+
+What is interesting is *why every guard rail failed*: libngu's own
+`#ifndef MICROPY_HW_ENABLE_RNG` guard never fired, because `#ifndef` passes when
+a macro is **defined as 0**. The TRNG liveness check can't detect a PRNG. And
+`testing/test_rng.py` ran **dieharder** and passed for five years — statistical
+tests measure *distribution*, not entropy, and that test defaulted to the
+simulator anyway, where it was really testing `arc4random`.
+
+So the goal here is structural rather than corrective. On hardware the entropy
+path is now:
+
+```
+trezor-crypto  ->  random_buffer()  ->  rng_get_or_fault()  ->  STM32 TRNG
+```
+
+No PRNG anywhere in it. MicroPython's `urandom` PRNG is no longer compiled in
+either — 0 yasmarang symbols remain in the firmware binary, where there were 6.
+
+## Is it actually equivalent?
+
+That's the whole claim, so it's tested rather than asserted. Two harnesses run
+the same expression against **both** interpreters and require identical output:
+
+```bash
+make diff        # difftest.py: 64 cases  +  errtest.py: 48 cases
+```
+
+| Check | Result |
+|---|---|
+| Deterministic crypto, 64 cases | **64 identical** |
+| ECDSA signatures, incl. low-R grind counters | **byte-identical** |
+| BIP-39 canonical vector (`abandon…about`) | exact |
+| `ecdh_multiply`, BIP32 derive / serialize / fingerprints | byte-exact |
+| AES-CTR partial-block state + `copy()` | identical |
+| Exception classes, 48 bad inputs | **47 identical** |
+| `test_wif.py`, `test_addr.py`, `test_msg.py` | identical pass/fail sets |
+| MK4 + Q firmware | build, `rng-code-check` passes |
+| Flash | **~39 KB smaller** than libngu |
+
+`external/libngu` is kept in the tree on purpose: it's the reference those tests
+compare against, which is what makes "byte-identical" checkable.
+
+Two differences are intentional, both where libngu is worse: `ngu.random.bytes(-1)`
+hard-crashes libngu (SIGBUS) where this raises `ValueError`, and
+`ngu.random.reseed()` is now a no-op because there's no PRNG state left to reseed.
+
+## Try it
+
+```bash
+cd unix && make setup && make ngu-setup && CFLAGS_EXTRA="-Wno-error" make
+make diff                        # prove the two backends agree
+make ci                          # build + boot the simulator + smoke test
+make ci BACKEND=libngu           # ...and the same against the original
+```
+
+The graphical simulator, seeded with a throwaway test seed:
+
+```bash
+cd unix-tz && DISPLAY=:0 ../ENV/bin/python simulator.py --q1   --seed "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+```
+
+## Docs
+
+| | |
+|---|---|
+| [DISCLAIMER.md](DISCLAIMER.md) | the risks, in full — read this one |
+| [TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md) | what changed, why, and the layout |
+| [TESTING.md](TESTING.md) | environment setup and its many sharp edges |
+| [VENDOR.md](external/trezor-crypto/VENDOR.md) | provenance of the vendored library |
+| [coldcard-changes.patch](external/trezor-crypto/coldcard-changes.patch) | **the entire fork of trezor's code**: 4 files, +55/−11 |
+
+## License
+
+COLDCARD firmware is MIT **plus the Commons Clause** ([COPYING-CC](COPYING-CC)) —
+you may modify and publish it, you may **not sell** it. trezor-crypto is MIT.
+Both apply here; see [DISCLAIMER.md](DISCLAIMER.md#licensing).
 
 ---
+
+## ─── Upstream COLDCARD README below, preserved verbatim ───
+
+Everything from here down is Coinkite's original README, kept for its build and
+code-organization docs. Note two things it says that are **not true of this
+fork**: reproducible builds will not match Coinkite's official binaries, and its
+`make -f MK4-Makefile repro` command references a file that no longer exists
+(it is `stm32/MK-Makefile`).
 
 # COLDCARD Hardware Wallet
 
