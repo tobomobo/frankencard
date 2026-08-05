@@ -82,6 +82,14 @@ extern void ckcc_early_init(void);
 // Need CRC32 for 7z support.
 #define MICROPY_PY_UBINASCII_CRC32  (1)
 
+// Do not compile micropython's `urandom` module. Its extmod/modurandom.c
+// carries a yasmarang PRNG -- the same small-state generator that, reached via
+// a stale rng_get() symbol, caused the v4.0.0-6.5.1 low-entropy bug. Nothing in
+// shared/ imports urandom (compat7z.py defines its own urandom() over the
+// hardware TRNG), so this is dead weight that only creates the opportunity for
+// a future `import urandom` to reintroduce a PRNG into a security path.
+#define MICROPY_PY_URANDOM          (0)
+
 // Experiment, works.
 //#define MICROPY_STACKLESS       (1)
 
