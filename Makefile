@@ -54,9 +54,8 @@ help:
 .PHONY: diff
 diff:
 	python3 external/c-modules-trezor/difftest.py
-	python3 external/c-modules-trezor/errtest.py || \
-		echo "NOTE: errtest exits nonzero on any divergence; exactly one is expected \
-(libngu SIGBUSes on ngu.random.bytes(-1)). Check the list above."
+	python3 external/c-modules-trezor/errtest.py
+	python3 external/c-modules-trezor/fuzz_codecs.py
 
 $(SIM_BIN) build:
 	cd unix && $(MAKE) all

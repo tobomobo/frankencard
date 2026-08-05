@@ -79,12 +79,15 @@ wanted") where it does not actually take effect; the boards never had it.
 
 ## Evidence
 
-Two harnesses run the same expression against both the libngu-backed and
+Three harnesses run the same expression against both the libngu-backed and
 trezor-backed interpreters and require identical output:
 
 ```bash
+make diff                                       # runs all three
 python3 external/c-modules-trezor/difftest.py   # 64 deterministic cases
-python3 external/c-modules-trezor/errtest.py    # 48 bad-input cases
+python3 external/c-modules-trezor/errtest.py    # 51 bad-input cases, with an
+                                                #   allowlist of intended diffs
+python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
 ```
 
 | Check | Result |
@@ -95,7 +98,8 @@ python3 external/c-modules-trezor/errtest.py    # 48 bad-input cases
 | `ecdh_multiply` (hashed, not raw ECDH) | byte-exact |
 | BIP32 derive / serialize / fingerprints | identical |
 | AES-CTR partial-block state + `copy()` | identical |
-| Exception classes, 48 bad inputs | **47 identical** |
+| Exception classes, 51 bad inputs | **47 identical, 3 intended** |
+| Fuzzed base32, 427 inputs | **0 unexpected differences** |
 | `test_wif.py`, `test_addr.py`, `test_msg.py` | identical pass/fail sets |
 | MK4 / Q firmware | build, `rng-code-check` passes |
 | Flash | **~39 KB smaller** than libngu |
@@ -104,14 +108,20 @@ python3 external/c-modules-trezor/errtest.py    # 48 bad-input cases
 differential tests compare against, and it is what makes the byte-identical
 claim checkable rather than asserted.
 
-### Two intentional differences
+### Three intentional differences
 
-Both are cases where libngu is worse, found by differential testing:
+All are cases where libngu is worse, found by differential testing:
 
 1. **`ngu.random.bytes(-1)` hard-crashes libngu** (SIGBUS, exit 138) with no
    exception. Here it raises `ValueError`. This is a live bug in shipping
    firmware.
-2. **`ngu.random.reseed()` is a no-op.** In libngu it *replaced* the PRNG state.
+2. **`b32_decode` rejects an embedded NUL** where libngu silently truncates.
+   libngu's loop is `while (... && *ptr)`, so `"MZXW\x006YTBOI"` decodes to
+   `b'fo'` there instead of the full six bytes. That path handles TOTP secrets
+   (`users.py`, reachable over USB) and QR payloads (`bbqr.py`), where silently
+   shortening secret material is worse than refusing it. Found by
+   `fuzz_codecs.py`, not by hand-picked vectors.
+3. **`ngu.random.reseed()` is a no-op.** In libngu it *replaced* the PRNG state.
    With a kernel CSPRNG / hardware TRNG there is no state a 32-bit value can
    improve, so it does nothing. `shared/mk4.py` still calls it.
 
@@ -126,7 +136,7 @@ decodes hand-typed passwords and relies on `0→O`, `1→L`, `8→B` remapping.
 | `external/trezor-crypto/` | vendored `crypto/` — see [VENDOR.md](external/trezor-crypto/VENDOR.md) |
 | `external/trezor-crypto/coldcard-changes.patch` | the entire fork of trezor's code: 4 files, +55/−11, additive |
 | `external/c-modules-trezor/ngutz/` | the `ngu` shim (~1,900 lines of new C) |
-| `external/c-modules-trezor/{difftest,errtest}.py` | the differential harnesses |
+| `external/c-modules-trezor/{difftest,errtest,fuzz_codecs}.py` | the differential harnesses |
 | `unix/variant-trezor/` | simulator build variant → `coldcard-mpy-tz` |
 | `stm32/*/c-modules-trezor/` | per-board module dirs for the ARM builds |
 

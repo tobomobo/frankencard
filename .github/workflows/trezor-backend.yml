@@ -80,19 +80,15 @@ jobs:
       - name: Differential test (deterministic crypto must be byte-identical)
         run: python3 external/c-modules-trezor/difftest.py
 
+      # errtest carries its own allowlist of intentional divergences
+      # (EXPECTED_DIVERGENCES) and exits nonzero only on a new one, so no
+      # grepping is needed here.
       - name: Exception-parity test
-        # errtest exits 1 on any difference. One difference is expected and
-        # intentional: libngu SIGBUSes on ngu.random.bytes(-1) where this
-        # backend raises ValueError. Fail only if anything ELSE diverges.
-        run: |
-          set +e
-          out=$(python3 external/c-modules-trezor/errtest.py)
-          echo "$out"
-          n=$(echo "$out" | grep -c '^  DIFFER')
-          echo "$out" | grep '^  DIFFER' | grep -qv 'random.bytes(-1)' && \
-            { echo "::error::unexpected exception-type divergence"; exit 1; }
-          [ "$n" -le 1 ] || { echo "::error::too many divergences: $n"; exit 1; }
-          echo "only the known intentional divergence is present"
+        run: python3 external/c-modules-trezor/errtest.py
+
+      # The base32 decoder is hand-written; fuzz it rather than trusting vectors.
+      - name: Fuzz the codecs against libngu
+        run: python3 external/c-modules-trezor/fuzz_codecs.py
 
   firmware:
     name: ARM firmware builds

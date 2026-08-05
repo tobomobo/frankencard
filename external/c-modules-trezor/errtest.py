@@ -36,6 +36,8 @@ CASES = [
     'ngu.codecs.b58_decode("1" * 200)',
     'ngu.codecs.b32_decode("!!!!")',
     'ngu.codecs.b32_decode("A")',              # invalid base32 length
+    'ngu.codecs.b32_decode("MZXW\\x006YTBOI")',  # embedded NUL: libngu truncates
+    'ngu.codecs.b32_decode("A\\x00B")',
     'ngu.codecs.b58_encode(b"x" * 200)',       # over 128-byte working buffer
     'ngu.codecs.segwit_decode("notanaddress")',
     'ngu.codecs.segwit_decode("bc1qqqqqqq")',  # bad checksum
@@ -79,6 +81,30 @@ CASES = [
     'ngu.aes.CBC(True, b"\\x00"*32, b"\\x00"*16).cipher(b"short")',  # not %16
 ]
 
+# Divergences that are deliberate. Anything NOT in here is a bug.
+# Keyed by a substring of the expression.
+EXPECTED_DIVERGENCES = {
+    # libngu SIGBUSes on a negative count; we raise ValueError.
+    "ngu.random.bytes(-1)":
+        "libngu crashes (SIGBUS) on negative count",
+    # libngu's decoder loop is `while (*ptr)`, so it stops at an embedded NUL
+    # and silently returns a TRUNCATED result -- e.g. b'fo' for a 6-byte
+    # secret. These decode TOTP secrets (users.py) and QR payloads (bbqr.py),
+    # where silently shortening secret material is worse than refusing it.
+    'b32_decode("MZXW\\x006YTBOI")':
+        "libngu silently truncates at an embedded NUL",
+    'b32_decode("A\\x00B")':
+        "libngu silently truncates at an embedded NUL",
+}
+
+
+def expected(expr):
+    for k, why in EXPECTED_DIVERGENCES.items():
+        if k in expr:
+            return why
+    return None
+
+
 WRAPPER = """import ngu
 try:
     _r = %s
@@ -107,7 +133,7 @@ def main():
             print("missing binary: %s" % b)
             return 2
 
-    same = differ = 0
+    same = differ = intended = 0
     for expr in CASES:
         a = run(LIBNGU, expr)
         b = run(TREZOR, expr)
@@ -117,10 +143,19 @@ def main():
             same += 1
             print("  ok      %-60s both -> %s" % (short, a))
         else:
-            differ += 1
-            print("  DIFFER  %-60s libngu=%s trezor=%s" % (short, a, b))
+            why = expected(expr)
+            if why:
+                intended += 1
+                print("  ok*     %-60s libngu=%s trezor=%s" % (short, a, b))
+                print("          ^ intended: %s" % why)
+            else:
+                differ += 1
+                print("  DIFFER  %-60s libngu=%s trezor=%s" % (short, a, b))
 
-    print("\n%d matching, %d differing" % (same, differ))
+    print("\n%d matching, %d intended divergences, %d UNEXPECTED"
+          % (same, intended, differ))
+    if differ:
+        print("FAIL: unexpected divergence from libngu")
     return 1 if differ else 0
 
 
