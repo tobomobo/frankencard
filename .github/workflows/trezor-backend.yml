@@ -1,0 +1,140 @@
+name: trezor-crypto backend
+
+# Builds both interpreters -- libngu-backed and trezor-crypto-backed -- and
+# requires their crypto output to be byte-identical. That equivalence is the
+# entire claim of this fork, so it is checked on every push rather than asserted
+# in a README.
+#
+# Upstream Coldcard/firmware has no CI; this workflow is specific to this fork.
+
+on:
+  push:
+    branches: [master, trezor-crypto-backend]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  differential:
+    name: libngu vs trezor-crypto must agree
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: System dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential automake autoconf libtool pkg-config \
+            libffi-dev libsdl2-dev python3-venv
+
+      - name: Checkout the submodules we actually need
+        run: |
+          git submodule update --init --depth 1 \
+            external/micropython external/libngu \
+            external/ckcc-protocol external/mpy-qr
+          git -C external/libngu submodule update --init --depth 1 \
+            libs/cifra libs/secp256k1
+
+      # Upstream ships ubuntu24_mpy.patch for exactly this.
+      - name: Patch micropython for this toolchain
+        run: |
+          git -C external/micropython apply ../../ubuntu24_mpy.patch || \
+            echo "patch did not apply cleanly; continuing with -Wno-error"
+
+      - name: Build mpy-cross
+        run: make -C external/micropython/mpy-cross CFLAGS_EXTRA="-Wno-error"
+
+      - name: Python environment
+        run: |
+          python3 -m venv ENV
+          ./ENV/bin/pip install -q -U pip
+          ./ENV/bin/pip install -q pysdl2 pillow
+
+      - name: One-time setup (libngu secp256k1 precompute)
+        run: |
+          cd unix
+          make setup
+          make ngu-setup
+
+      # The reference: libngu-backed interpreter.
+      - name: Build coldcard-mpy (libngu)
+        run: cd unix && CFLAGS_EXTRA="-Wno-error" make
+
+      # The subject: trezor-crypto-backed interpreter.
+      - name: Build coldcard-mpy-tz (trezor-crypto)
+        run: |
+          cd external/micropython/ports/unix
+          CFLAGS_EXTRA="-Wno-error" make -j2 \
+            VARIANT=coldcard-mpy-tz \
+            VARIANT_DIR="$GITHUB_WORKSPACE/unix/variant-trezor" \
+            CC_TOP="$GITHUB_WORKSPACE"
+
+      - name: The vendored trezor-crypto patch must still be exactly the fork
+        run: |
+          cd external/trezor-crypto
+          patch -p1 --dry-run -R < coldcard-changes.patch
+
+      - name: Differential test (deterministic crypto must be byte-identical)
+        run: python3 external/c-modules-trezor/difftest.py
+
+      - name: Exception-parity test
+        # errtest exits 1 on any difference. One difference is expected and
+        # intentional: libngu SIGBUSes on ngu.random.bytes(-1) where this
+        # backend raises ValueError. Fail only if anything ELSE diverges.
+        run: |
+          set +e
+          out=$(python3 external/c-modules-trezor/errtest.py)
+          echo "$out"
+          n=$(echo "$out" | grep -c '^  DIFFER')
+          echo "$out" | grep '^  DIFFER' | grep -qv 'random.bytes(-1)' && \
+            { echo "::error::unexpected exception-type divergence"; exit 1; }
+          [ "$n" -le 1 ] || { echo "::error::too many divergences: $n"; exit 1; }
+          echo "only the known intentional divergence is present"
+
+  firmware:
+    name: ARM firmware builds
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ARM toolchain
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: '13.2.Rel1'
+
+      - name: Submodules
+        run: |
+          git submodule update --init --depth 1 \
+            external/micropython external/libngu external/mpy-qr
+          git -C external/libngu submodule update --init --depth 1 \
+            libs/cifra libs/secp256k1
+          git submodule update --init --depth 1 stm32/mk4-bootloader/hal
+
+      - name: Build mpy-cross
+        run: make -C external/micropython/mpy-cross CFLAGS_EXTRA="-Wno-error"
+
+      # `all` runs the rng-code-check target, which fails the build if the wrong
+      # rng_get symbol linked in -- the assertion that would have caught the
+      # original v4.0.0 entropy bug.
+      - name: Mk4 / Mk5 firmware
+        run: |
+          cd stm32
+          make -f MK-Makefile setup
+          CFLAGS_EXTRA="-Wno-error" make -f MK-Makefile -j2
+
+      - name: Q firmware
+        run: cd stm32 && CFLAGS_EXTRA="-Wno-error" make -f Q1-Makefile -j2
+
+      - name: No PRNG may be linked into the firmware
+        run: |
+          cd stm32
+          for elf in l-port/build-COLDCARD_MK4/firmware.elf \
+                     l-port/build-COLDCARD_Q1/firmware.elf; do
+            n=$(arm-none-eabi-nm "$elf" | grep -ci yasmarang || true)
+            echo "$elf: $n yasmarang symbols"
+            [ "$n" -eq 0 ] || { echo "::error::PRNG linked into $elf"; exit 1; }
+          done
