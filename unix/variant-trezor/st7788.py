@@ -1,0 +1,1 @@
+../variant/st7788.py
