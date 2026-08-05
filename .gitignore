@@ -26,3 +26,14 @@ __pycache__/
 pp
 
 .idea/
+
+# --- trezor-crypto backend fork: local build/run artifacts ---
+.local/
+unix-tz/
+l-port
+l-mpy
+build-*/
+coldcard-mpy
+coldcard-mpy-tz
+.venv/
+.claude/settings.local.json
