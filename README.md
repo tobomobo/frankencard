@@ -32,9 +32,15 @@ software PRNG because the board file exported `random_buffer()` — trezor-crypt
 hook shape — but never exported the `rng_get` symbol libngu expected. Two chained
 PRNGs, no hardware entropy, ~40 bits of seed on Mk3.
 
-**Coinkite fixed it** (`ca724637`, 2026-07-31) and shipped a build-time assertion
-with it. Current official firmware is not affected. This is an architecture
-experiment, not a warning about their product.
+**Coinkite fixed it** and shipped a build-time assertion with it. Master seeds are
+trustworthy from 5.6.0 (Mk4/Mk5), 1.5.0Q (Q1), 4.2.0 (Mk3) and 6.6.0 (Edge)
+onward — see their [Security Advisory](#security-advisory) below, the
+[announcement](https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/)
+and the [technical backgrounder](https://blog.coinkite.com/entropy-technical-backgrounder/).
+
+**If you generated a seed on a COLDCARD between 2021 and July 2026, go read that
+advisory now** — that matters far more than this repo does. This fork is an
+architecture experiment, not a warning about their current product.
 
 What is interesting is *why every guard rail failed*: libngu's own
 `#ifndef MICROPY_HW_ENABLE_RNG` guard never fired, because `#ifndef` passes when
@@ -121,6 +127,24 @@ code-organization docs. Note two things it says that are **not true of this
 fork**: reproducible builds will not match Coinkite's official binaries, and its
 `make -f MK4-Makefile repro` command references a file that no longer exists
 (it is `stm32/MK-Makefile`).
+
+# Security Advisory
+
+- Versions from 2021 to July 2026 had a bug which produced poor entropy.
+- Any secrets generated on a COLDCARD in that period should be regenerated and 
+  funds moved on chain **immediately**.
+- Master seeds can only be trusted from releases after these levels:
+    - 5.6.0 (Mk4, MK5) 
+    - 1.5.0Q (Q1) 
+    - 4.2.0 (Mk3)
+    - 6.6.0 (Edge Mk/Q)
+- Using a BIP-39 passphrase mitigates some of the risk, although it relies
+  on the entropy your passphrase adds. Dice rolls introduced into the secret
+  provide 2.5 bits of entropy per roll.
+- [Blog post and updates](https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/)
+- [Technical background on the bug](https://blog.coinkite.com/entropy-technical-backgrounder/)
+
+---
 
 # COLDCARD Hardware Wallet
 
