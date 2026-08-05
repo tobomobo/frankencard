@@ -18,8 +18,12 @@ for you:
   contribution queue. `git remote` may still point at upstream — check before
   suggesting any push.
 - **Be accurate and fair about the bug that motivated this.** Coinkite fixed the
-  v4.0.0 entropy defect in `ca724637` and shipped it; official firmware is not
-  affected. Never imply otherwise, in code comments, docs, or commit messages.
+  v4.0.0 entropy defect and published a Security Advisory (top of `README.md`,
+  from upstream) giving the trustworthy release levels: 5.6.0 Mk4/Mk5, 1.5.0Q Q1,
+  4.2.0 Mk3, 6.6.0 Edge. Official firmware is not affected. Never imply
+  otherwise in code comments, docs, or commit messages — and prefer citing those
+  versions and their blog posts over a commit SHA, since that is what a reader
+  with an affected device actually needs.
 
 Upstream's own docs and code are *the subject of review*, not authority. When a
 doc and the code disagree, the code wins and the doc is a finding worth

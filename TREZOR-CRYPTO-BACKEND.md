@@ -34,8 +34,12 @@ MicroPython's *own* yasmarang PRNG, because the board's `rng.c` exported
 Result: two chained PRNGs, no hardware entropy, ~40 bits on Mk3 and ~72 on
 Mk4/Q.
 
-Coinkite fixed it (`ca724637`, 2026-07-31) and added an `arm-none-eabi-nm`
-build assertion. **Current official firmware is fine.**
+Coinkite fixed it and added an `arm-none-eabi-nm` build assertion. Per their
+Security Advisory, seeds are trustworthy from 5.6.0 (Mk4/Mk5), 1.5.0Q (Q1),
+4.2.0 (Mk3) and 6.6.0 (Edge) onward. **Current official firmware is fine** —
+anyone with a seed generated between 2021 and July 2026 should follow
+[their advisory](https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/),
+not this repo.
 
 The interesting part is *why the guard rails all failed*:
 

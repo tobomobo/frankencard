@@ -58,10 +58,18 @@ v4.0.0–6.5.1, where `ngu.random` drew from two chained software PRNGs instead 
 the hardware TRNG because a board file never exported the `rng_get` symbol that
 libngu expected.
 
-**Coinkite fixed it.** The fix landed on `master` as commit `ca724637`
-(2026-07-31) and shipped, along with a build-time `arm-none-eabi-nm` assertion
-that fails the build if the wrong RNG links in. Current official firmware is not
-affected.
+**Coinkite fixed it**, along with a build-time `arm-none-eabi-nm` assertion that
+fails the build if the wrong RNG links in. Per their
+[Security Advisory](README.md#security-advisory), master seeds can be trusted
+from these releases onward: **5.6.0** (Mk4/Mk5), **1.5.0Q** (Q1), **4.2.0**
+(Mk3), **6.6.0** (Edge). See the
+[announcement](https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/)
+and the [technical backgrounder](https://blog.coinkite.com/entropy-technical-backgrounder/).
+
+**If you generated a seed on a COLDCARD between 2021 and July 2026, act on that
+advisory rather than on anything in this repo.** Coinkite's guidance is to
+regenerate the secret and move funds on chain immediately. That is real and
+urgent; this fork is neither.
 
 This fork is an architectural exercise — "what would it look like to go back to
 trezor-crypto, and can the entropy path be made structurally incapable of that
