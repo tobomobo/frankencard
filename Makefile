@@ -57,8 +57,23 @@ diff:
 	python3 external/c-modules-trezor/errtest.py
 	python3 external/c-modules-trezor/fuzz_codecs.py
 
-$(SIM_BIN) build:
+# BACKEND-aware build. This used to be `cd unix && make all` for both backends,
+# which builds VARIANT=coldcard-mpy (libngu) -- so `make build BACKEND=tz` produced
+# the wrong binary and `make ci BACKEND=tz` silently tested a STALE coldcard-mpy-tz.
+MPY_UNIX  := $(CURDIR)/external/micropython/ports/unix
+VARIANT_TZ := $(CURDIR)/unix/variant-trezor
+
+.PHONY: build
+ifeq ($(BACKEND),tz)
+build:
+	cd $(MPY_UNIX) && $(MAKE) -j4 VARIANT=coldcard-mpy-tz \
+		VARIANT_DIR=$(VARIANT_TZ) CC_TOP=$(CURDIR) DEBUG=1
+else
+build:
 	cd unix && $(MAKE) all
+endif
+
+$(SIM_BIN): build
 
 sim-start: $(SIM_BIN)
 	@mkdir -p $(dir $(SIM_LOG))

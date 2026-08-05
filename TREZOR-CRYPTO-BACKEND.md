@@ -92,7 +92,7 @@ python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
 
 | Check | Result |
 |---|---|
-| Deterministic crypto, 64 cases | **64 identical** |
+| Deterministic crypto, 68 cases | **68 identical** |
 | ECDSA signatures, grind counters 0–3 | **byte-identical** |
 | BIP-39 canonical vector (`abandon…about`) | exact |
 | `ecdh_multiply` (hashed, not raw ECDH) | byte-exact |
@@ -135,7 +135,7 @@ decodes hand-typed passwords and relies on `0→O`, `1→L`, `8→B` remapping.
 |---|---|
 | `external/trezor-crypto/` | vendored `crypto/` — see [VENDOR.md](external/trezor-crypto/VENDOR.md) |
 | `external/trezor-crypto/coldcard-changes.patch` | the entire fork of trezor's code: 4 files, +55/−11, additive |
-| `external/c-modules-trezor/ngutz/` | the `ngu` shim (~1,900 lines of new C) |
+| `external/c-modules-trezor/ngutz/` | the `ngu` shim (~1,875 lines of new C) |
 | `external/c-modules-trezor/{difftest,errtest,fuzz_codecs}.py` | the differential harnesses |
 | `unix/variant-trezor/` | simulator build variant → `coldcard-mpy-tz` |
 | `stm32/*/c-modules-trezor/` | per-board module dirs for the ARM builds |

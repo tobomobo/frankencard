@@ -55,7 +55,12 @@ CASES = [
     'H(ngu.codecs.b32_decode(ngu.codecs.b32_encode(b"foobar")))',
     'ngu.codecs.segwit_encode("bc", 0, b"\\x00"*20)',
     'ngu.codecs.segwit_encode("bc", 1, b"\\x01"*32)',
-    'repr(ngu.codecs.segwit_decode("bc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk9"))',
+    # real BIP-173 vectors -- the previous one here was a bogus address that
+    # errored on BOTH backends, so segwit_decode was never value-compared.
+    'repr(ngu.codecs.segwit_decode("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"))',
+    'repr(ngu.codecs.segwit_decode("tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7"))',
+    'repr(ngu.codecs.segwit_decode("BC1SW50QGDZ25J"))',
+    'repr(ngu.codecs.segwit_decode("bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"))',
     # --- hdnode ---
     'H(ngu.hdnode.HDNode().from_master(b"\\x00"*32).privkey())',
     'H(ngu.hdnode.HDNode().from_master(b"\\x00"*32).pubkey())',
@@ -115,6 +120,54 @@ CASES = [
     'else "DIFFER"',
 ]
 
+
+# ---------------------------------------------------------------------------
+# Backend identity probe.
+#
+# Without this, pointing both paths at the SAME binary produces a green
+# "64 identical, 0 differ" report -- the harness cannot tell it is comparing a
+# build to itself, which makes every result below meaningless. Verified: copying
+# coldcard-mpy over coldcard-mpy-tz used to pass with exit 0.
+#
+# So positively identify each backend first, using a KNOWN intentional
+# divergence: ngu.random.bytes(-1) hard-crashes libngu (SIGBUS, no exception)
+# and raises ValueError on the trezor backend.
+# ---------------------------------------------------------------------------
+PROBE = ("import ngu\n"
+         "try:\n"
+         "    ngu.random.bytes(-1)\n"
+         "    print('no-raise')\n"
+         "except Exception as e:\n"
+         "    print(type(e).__name__)\n")
+
+
+def identify(binary):
+    r = subprocess.run([str(binary), "-c", PROBE], capture_output=True, text=True,
+                       timeout=60)
+    out = r.stdout.strip()
+    if not out and r.returncode != 0:
+        return "libngu"          # crashed without raising
+    if out == "ValueError":
+        return "trezor"
+    return "unknown(%s rc=%d)" % (out, r.returncode)
+
+
+def check_backends():
+    a, b = identify(LIBNGU), identify(TREZOR)
+    print("backend probe: %s -> %s   |   %s -> %s"
+          % (LIBNGU.name, a, TREZOR.name, b))
+    if a == b:
+        print("\nFATAL: both binaries behave identically on the probe, so they are\n"
+              "almost certainly the same build. Every comparison below would be\n"
+              "vacuously 'identical'. Rebuild both backends and re-run.")
+        return False
+    if a != "libngu" or b != "trezor":
+        print("\nFATAL: could not positively identify both backends "
+              "(expected libngu / trezor).")
+        return False
+    return True
+
+
 PREAMBLE = "import ngu\nfrom ubinascii import hexlify as H\n"
 
 
@@ -137,6 +190,9 @@ def main():
             print("missing binary: %s" % b)
             return 2
 
+    if not check_backends():
+        return 2
+
     same = differ = both_err = 0
     problems = []
 
@@ -158,7 +214,17 @@ def main():
             print("      libngu: %s" % a[:110])
             print("      trezor: %s" % b[:110])
 
+    total = same + differ + both_err
     print("\n%d identical, %d differ, %d error on both" % (same, differ, both_err))
+
+    # Comparison floor: a harness that silently compares nothing must not pass.
+    if total != len(CASES):
+        print("FATAL: only %d of %d cases produced a comparison" % (total, len(CASES)))
+        return 2
+    if both_err:
+        print("FATAL: %d case(s) errored on BOTH backends -- a case that fails "
+              "everywhere proves nothing and is probably a broken vector." % both_err)
+        return 2
     if problems:
         print("\nDiffering cases need review: a divergence may be intended "
               "(nonce derivation) or a bug.")

@@ -152,8 +152,13 @@ def main():
                 differ += 1
                 print("  DIFFER  %-60s libngu=%s trezor=%s" % (short, a, b))
 
+    total = same + intended + differ
     print("\n%d matching, %d intended divergences, %d UNEXPECTED"
           % (same, intended, differ))
+    # Floor: a harness that compares nothing must not report success.
+    if total != len(CASES):
+        print("FATAL: only %d of %d cases produced a comparison" % (total, len(CASES)))
+        return 2
     if differ:
         print("FAIL: unexpected divergence from libngu")
     return 1 if differ else 0

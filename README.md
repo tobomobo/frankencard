@@ -36,7 +36,7 @@ the same names with the same signatures and semantics, and **nothing in
 
 | Where the code lives | |
 |---|---|
-| `external/c-modules-trezor/ngutz/` | the `ngu` shim — ~1,900 lines of new C |
+| `external/c-modules-trezor/ngutz/` | the `ngu` shim — ~1,875 lines of new C |
 | `external/trezor-crypto/` | vendored upstream `crypto/`, MIT |
 | [`coldcard-changes.patch`](external/trezor-crypto/coldcard-changes.patch) | **the whole fork of trezor's code: 4 files, +55/−11, additive** |
 | `external/libngu/` | kept on purpose — the reference the tests diff against |
@@ -52,10 +52,11 @@ make diff      # runs the same expression on both backends, demands equality
 
 | | |
 |---|---|
-| Deterministic crypto, 64 cases | **64 identical** |
+| Deterministic crypto, 68 cases | **68 identical** |
 | ECDSA signatures, incl. low-R grind | **byte-identical** |
 | BIP-39 vector, `ecdh_multiply`, BIP32 derive/serialize | byte-exact |
-| Exception classes, 48 bad inputs | 47 identical |
+| Exception classes, 51 bad inputs | 47 identical, 3 intended |
+| Fuzzed base32, 427 inputs | 0 unexpected differences |
 | `test_wif` / `test_addr` / `test_msg` | identical pass/fail sets |
 | MK4 + Q firmware | build, `rng-code-check` passes |
 

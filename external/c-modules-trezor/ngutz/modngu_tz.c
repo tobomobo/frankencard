@@ -110,7 +110,11 @@ STATIC mp_obj_t tz_sha256s(mp_obj_t arg) {
     GET_BUF(bi, arg, MP_BUFFER_READ);
     uint8_t out[SHA256_DIGEST_LENGTH];
     sha256_Raw(bi.buf, bi.len, out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_sha256s_obj, tz_sha256s);
 
@@ -119,7 +123,11 @@ STATIC mp_obj_t tz_sha256d(mp_obj_t arg) {
     uint8_t out[SHA256_DIGEST_LENGTH];
     sha256_Raw(bi.buf, bi.len, out);
     sha256_Raw(out, sizeof(out), out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_sha256d_obj, tz_sha256d);
 
@@ -150,7 +158,11 @@ STATIC mp_obj_t tz_sha256t(size_t n_args, const mp_obj_t *args) {
     uint8_t out[SHA256_DIGEST_LENGTH];
     sha256_Final(&ctx, out);
 
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    memzero(out, sizeof(out));
+    memzero(s0, sizeof(s0));
+    memzero(&ctx, sizeof(ctx));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(tz_sha256t_obj, 2, 3, tz_sha256t);
 
@@ -164,7 +176,11 @@ STATIC mp_obj_t tz_ripemd160(mp_obj_t arg) {
     }
     uint8_t out[RIPEMD160_DIGEST_LENGTH];
     ripemd160(bi.buf, bi.len, out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_ripemd160_obj, tz_ripemd160);
 
@@ -174,7 +190,12 @@ STATIC mp_obj_t tz_hash160(mp_obj_t arg) {
     uint8_t out[RIPEMD160_DIGEST_LENGTH];
     sha256_Raw(bi.buf, bi.len, mid);
     ripemd160(mid, sizeof(mid), out);
-    return bytes_from(out, sizeof(out));
+    memzero(mid, sizeof(mid));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_hash160_obj, tz_hash160);
 
@@ -185,6 +206,14 @@ STATIC mp_obj_t tz_pbkdf2_sha512(mp_obj_t pw_in, mp_obj_t salt_in, mp_obj_t roun
 
     if(rounds < 1) mp_raise_ValueError(MP_ERROR_TEXT("rounds"));
     if(salt.len == 0) mp_raise_ValueError(MP_ERROR_TEXT("salt"));
+
+    // pbkdf2_hmac_sha512() takes a uint32 iteration count. Without this check a
+    // caller asking for 2**32 rounds silently got ONE round -- i.e. a request for
+    // more work quietly produced almost none. libngu raised here, so raising also
+    // keeps the two backends in agreement.
+    if((uint64_t)rounds > 0xFFFFFFFFu) {
+        mp_raise_ValueError(MP_ERROR_TEXT("rounds too large"));
+    }
 
     uint8_t out[64];
     pbkdf2_hmac_sha512(pw.buf, pw.len, salt.buf, salt.len, rounds, out, sizeof(out));
@@ -216,7 +245,11 @@ STATIC mp_obj_t tz_sha512_digest(mp_obj_t self_in) {
     tz_sha512_obj_t *self = MP_OBJ_TO_PTR(self_in);
     uint8_t out[SHA512_DIGEST_LENGTH];
     sha512_Final(&self->ctx, out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_sha512_digest_obj, tz_sha512_digest);
 
@@ -271,7 +304,11 @@ STATIC mp_obj_t tz_hmac_sha256(mp_obj_t key_in, mp_obj_t msg_in) {
     GET_BUF(msg, msg_in, MP_BUFFER_READ);
     uint8_t out[SHA256_DIGEST_LENGTH];
     hmac_sha256(key.buf, key.len, msg.buf, msg.len, out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(tz_hmac_sha256_obj, tz_hmac_sha256);
 
@@ -280,7 +317,11 @@ STATIC mp_obj_t tz_hmac_sha512(mp_obj_t key_in, mp_obj_t msg_in) {
     GET_BUF(msg, msg_in, MP_BUFFER_READ);
     uint8_t out[SHA512_DIGEST_LENGTH];
     hmac_sha512(key.buf, key.len, msg.buf, msg.len, out);
-    return bytes_from(out, sizeof(out));
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // wipe: this buffer held digest/key material (libngu hashed straight
+    // into the result object and never had a stack copy).
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(tz_hmac_sha512_obj, tz_hmac_sha512);
 
@@ -357,9 +398,15 @@ STATIC mp_obj_t tz_random_uint32(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(tz_random_uint32_obj, tz_random_uint32);
 
 STATIC mp_obj_t tz_random_uniform(mp_obj_t mx_in) {
-    mp_int_t mx = mp_obj_get_int_truncated(mx_in);
+    // Truncate to 32 bits FIRST, then test. libngu read this into an `int`, so a
+    // bound of 2**32 became 0 there and returned 0; matching that keeps the
+    // backends in agreement. Testing before the cast instead would pass 0 to
+    // trezor's random_uniform(), which computes 0xFFFFFFFF % 0 and then spins
+    // forever -- verified: ngu.random.uniform(2**32) used to hang.
+    uint32_t mx = (uint32_t)mp_obj_get_int_truncated(mx_in);
+
     if(mx <= 1) return mp_obj_new_int_from_uint(0);
-    return mp_obj_new_int_from_uint(random_uniform((uint32_t)mx));
+    return mp_obj_new_int_from_uint(random_uniform(mx));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_random_uniform_obj, tz_random_uniform);
 

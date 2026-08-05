@@ -3,8 +3,8 @@
 ## What this repo is
 
 **FRANKENCARD**: an **unofficial hobby fork** of Coinkite's `Coldcard/firmware`
-that replaces the crypto library `libngu` with **trezor-crypto**. Work happens on
-`trezor-crypto-backend`; `master` tracks upstream.
+that replaces the crypto library `libngu` with **trezor-crypto**. Work happens on `master`
+(the fork was merged there); `upstream` is the fetch-only Coinkite remote.
 
 The name is deliberate and the tone is part of the safety story — it signals a
 transplant held together with stitches, not a product. Keep that register: do not
@@ -32,9 +32,8 @@ reporting.
 ## Quality gate
 
 ```bash
-python3 external/c-modules-trezor/difftest.py   # 64 cases, must be 0 differ
-python3 external/c-modules-trezor/errtest.py    # 48 cases, 1 known divergence
-make ci                                        # simulator smoke test
+make diff        # all three differential harnesses -- the REAL gate
+make ci          # build + boot the simulator + smoke test
 ```
 
 **The differential harnesses are the real gate.** They run the same expression
@@ -43,7 +42,7 @@ identical output. If a change makes them diverge, that is a finding to explain,
 not a diff to accept. `.github/workflows/trezor-backend.yml` enforces this plus
 both ARM builds on every push.
 
-`make ci` is only a smoke test (2 of ~2000 tests). See [TESTING.md](TESTING.md)
+`make ci` is only a smoke test (2 of ~250 collected tests). See [TESTING.md](TESTING.md)
 for what it does not cover and for the environment quirks it works around.
 
 ## Hard invariants
@@ -98,7 +97,7 @@ every caller before editing; prefer reporting a finding over making the edit.
 | Area | Files |
 | --- | --- |
 | Seed generation & entropy | `shared/seed.py`, `shared/mk4.py` (`rng_seeding`), `stm32/COLDCARD*/rng.c`, `external/c-modules-trezor/ngutz/modngu_tz.c` |
-| The crypto shim (all of it) | `external/c-modules-trezor/ngutz/*.c` — ~1,900 lines handling private keys |
+| The crypto shim (all of it) | `external/c-modules-trezor/ngutz/*.c` — ~1,875 lines handling private keys |
 | Secret storage | `shared/stash.py`, `shared/nvstore.py`, `shared/pincodes.py` |
 | Signing & verification | `shared/psbt.py`, `shared/sigheader.py`, `stm32/*/sigheader.h` |
 | Secure elements | `shared/callgate.py`, `docs/secure-elements.md` |

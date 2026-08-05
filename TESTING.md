@@ -5,8 +5,10 @@ Verified working 2026-08-05 on macOS 27 (arm64), Apple clang, Python 3.14.
 ## The real gate: differential tests
 
 ```bash
-python3 external/c-modules-trezor/difftest.py   # 64 cases; must report "0 differ"
-python3 external/c-modules-trezor/errtest.py    # 48 cases; 1 known divergence
+make diff        # runs all three harnesses
+# difftest.py    68 cases; must report "0 differ" and "0 error on both"
+# errtest.py     51 cases; 3 intended divergences, 0 unexpected
+# fuzz_codecs.py 427 fuzzed base32 inputs
 ```
 
 These need **both** interpreters built (`unix/coldcard-mpy` and
@@ -15,8 +17,10 @@ is a faithful replacement; `.github/workflows/trezor-backend.yml` runs them on
 every push, along with both ARM firmware builds and a check that no yasmarang
 symbol is linked in.
 
-The one accepted divergence is `ngu.random.bytes(-1)`: libngu SIGBUSes, this
-backend raises `ValueError`. Anything else differing is a bug.
+There are **three** accepted divergences, all listed in errtest.py's
+`EXPECTED_DIVERGENCES` (negative byte count, embedded NUL in base32, and
+`reseed()` being a no-op). The harness fails on any *other* difference, and
+refuses to run at all if the two binaries fail a backend-identity probe.
 
 ## Smoke test
 
@@ -33,7 +37,7 @@ runs a libngu self-check plus a two-test pytest smoke gate, stops the simulator.
 It is a **smoke gate, not a test run.** Be honest about this when reporting
 results — passing it means the toolchain works, not that a change is correct.
 
-- It runs **2 of ~2000 tests**. The suite is 66 files and drives a simulated
+- It runs **2 of ~250 collected tests**. The suite is 66 files and drives a simulated
   device over a socket with keypresses, so whole files take minutes:
   `test_seed_xor.py` was only 45% done after 4 minutes. It passes, it is just
   slow. For a real run, name the file and wait:
