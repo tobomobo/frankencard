@@ -20,7 +20,7 @@ CFLAGS_EXTRA += -DCOLDCARD_DEBUG=$(DEBUG_BUILD)
 
 # NgU and uQR libraries
 NGU_NEEDS_CIFRA = 1
-USER_C_MODULES = boards/$(BOARD)/c-modules
+USER_C_MODULES = boards/$(BOARD)/c-modules-trezor
 
 # the bulk of the COLDCARD-specific code
 # - do not want contents of stm32/boards/manifest.py
