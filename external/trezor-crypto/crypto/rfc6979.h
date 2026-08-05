@@ -35,6 +35,10 @@ typedef HMAC_DRBG_CTX rfc6979_state;
 
 void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
                   const ecdsa_curve *curve, rfc6979_state *rng);
+// COLDCARD-ADDED: see rfc6979.c. `extra` is 32 bytes or NULL.
+void init_rfc6979_ex(const uint8_t *priv_key, const uint8_t *hash,
+                     const uint8_t *extra, const ecdsa_curve *curve,
+                     rfc6979_state *rng);
 void generate_rfc6979(uint8_t rnd[32], rfc6979_state *rng);
 void generate_k_rfc6979(bignum256 *k, rfc6979_state *rng);
 

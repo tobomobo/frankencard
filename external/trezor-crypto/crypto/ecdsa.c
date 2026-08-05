@@ -680,9 +680,13 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
 // digest is 32 bytes of digest
 // is_canonical is an optional function that checks if the signature
 // conforms to additional coin-specific rules.
-int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
-                         const uint8_t *digest, uint8_t *sig, uint8_t *pby,
-                         int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+// COLDCARD-ADDED: `extra_nonce` (32 bytes or NULL) is threaded into RFC6979
+// seed material; see init_rfc6979_ex(). Everything else is unchanged. The
+// original two-name API is preserved by the wrappers below.
+int tc_ecdsa_sign_digest_ex(const ecdsa_curve *curve, const uint8_t *priv_key,
+                            const uint8_t *digest, uint8_t *sig, uint8_t *pby,
+                            int (*is_canonical)(uint8_t by, uint8_t sig[64]),
+                            const uint8_t *extra_nonce) {
   int ret = -1;
   int i = 0;
   curve_point R = {0};
@@ -691,7 +695,7 @@ int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 
 #if USE_RFC6979
   rfc6979_state rng = {0};
-  init_rfc6979(priv_key, digest, curve, &rng);
+  init_rfc6979_ex(priv_key, digest, extra_nonce, curve, &rng);
 #endif
 
   bn_read_be(digest, &z);
@@ -784,6 +788,15 @@ cleanup:
   memzero(&rng, sizeof(rng));
 #endif
   return ret;
+}
+
+// COLDCARD-ADDED: preserves the original signature; delegates with no extra
+// nonce, so behaviour for every pre-existing caller is bit-for-bit unchanged.
+int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
+                         const uint8_t *digest, uint8_t *sig, uint8_t *pby,
+                         int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+  return tc_ecdsa_sign_digest_ex(curve, priv_key, digest, sig, pby,
+                                 is_canonical, NULL);
 }
 
 // returns 0 on success

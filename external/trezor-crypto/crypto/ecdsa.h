@@ -95,6 +95,13 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
                const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len,
                uint8_t *sig, uint8_t *pby,
                int (*is_canonical)(uint8_t by, uint8_t sig[64]));
+// COLDCARD-ADDED: RFC6979 signing with 32 bytes of extra nonce entropy (or
+// NULL), matching libsecp256k1's nonce_function_rfc6979 data32 parameter.
+// Bypasses the zkp dispatch in ecdsa_sign_digest() -- pure-C path only.
+int tc_ecdsa_sign_digest_ex(const ecdsa_curve *curve, const uint8_t *priv_key,
+                            const uint8_t *digest, uint8_t *sig, uint8_t *pby,
+                            int (*is_canonical)(uint8_t by, uint8_t sig[64]),
+                            const uint8_t *extra_nonce);
 int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                       const uint8_t *digest, uint8_t *sig, uint8_t *pby,
                       int (*is_canonical)(uint8_t by, uint8_t sig[64]));

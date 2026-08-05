@@ -22,13 +22,24 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <assert.h>
+#include <string.h>  // COLDCARD-ADDED: memcpy, for init_rfc6979_ex
 
 #include "hmac_drbg.h"
 #include "memzero.h"
 #include "rfc6979.h"
 
-void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
-                  const ecdsa_curve *curve, rfc6979_state *state) {
+// COLDCARD-ADDED: `extra`, when non-NULL, is 32 bytes of additional nonce
+// entropy appended to the DRBG seed material, giving seed = priv || hash ||
+// extra. This matches libsecp256k1's nonce_function_rfc6979 keydata layout
+// (key32 || msg32 || data32) so the derived k -- and therefore the signature --
+// is byte-identical to libsecp256k1's for the same inputs. Needed because
+// Coldcard grinds this value to find low-R signatures.
+void init_rfc6979_ex(const uint8_t *priv_key, const uint8_t *hash,
+                     const uint8_t *extra, const ecdsa_curve *curve,
+                     rfc6979_state *state) {
+  uint8_t nonce[64] = {0};
+  size_t nonce_len = extra ? 64 : 32;
+
   if (curve) {
     bignum256 hash_bn = {0};
     bn_read_be(hash, &hash_bn);
@@ -37,14 +48,23 @@ void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
     assert(bn_bitcount(&curve->order) >= 256);
     bn_mod(&hash_bn, &curve->order);
 
-    uint8_t hash_reduced[32] = {0};
-    bn_write_be(&hash_bn, hash_reduced);
+    bn_write_be(&hash_bn, nonce);
     memzero(&hash_bn, sizeof(hash_bn));
-    hmac_drbg_init(state, priv_key, 32, hash_reduced, 32);
-    memzero(hash_reduced, sizeof(hash_reduced));
   } else {
-    hmac_drbg_init(state, priv_key, 32, hash, 32);
+    memcpy(nonce, hash, 32);
   }
+
+  if (extra) {
+    memcpy(nonce + 32, extra, 32);
+  }
+
+  hmac_drbg_init(state, priv_key, 32, nonce, nonce_len);
+  memzero(nonce, sizeof(nonce));
+}
+
+void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
+                  const ecdsa_curve *curve, rfc6979_state *state) {
+  init_rfc6979_ex(priv_key, hash, NULL, curve, state);
 }
 
 // generate next number from deterministic random number generator
