@@ -185,6 +185,15 @@ correct.)
 
 ## Known gaps
 
+- **A TRNG fault during signing leaks key material onto the stack.** On STM32,
+  `random_buffer()` raises `OSError` when the hardware RNG faults. That is a
+  MicroPython NLR longjmp, so it unwinds straight out of
+  `tc_ecdsa_sign_digest_ex()` and skips the `memzero()` of `k`, `randk` and the
+  other scalars at the end of that function. Not fixed, because fixing it
+  properly means restructuring trezor's signing routine (an `nlr_push` or a
+  pre-fetched entropy pool), which conflicts with keeping the fork minimal.
+  Note this project made the window *slightly wider*: adding the SECS/CECS
+  check below created a new raise path that did not exist before.
 - **Never run on real hardware.**
 - The `keypair` and `ngu.hash.sha512` objects have no finaliser, so key material
   is not wiped on GC. This **matches libngu**, so it was left alone rather than

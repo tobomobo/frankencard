@@ -66,7 +66,21 @@ static uint32_t rng_get_or_fault(void)
     // Wait for a new random number to be ready, takes on the order of 10us
     uint32_t start = HAL_GetTick();
 
-    while (!(RNG->SR & RNG_SR_DRDY)) {
+    while (1) {
+        uint32_t sr = RNG->SR;
+
+        // Seed error (SECS) or clock error (CECS): per the reference manual the
+        // contents of DR are not usable when either is set. Previously only DRDY
+        // was tested, so a faulted TRNG could hand back a suspect word that went
+        // straight into a key. trezor-crypto's own STM32 driver waits on
+        // (SECS | CECS | DRDY) == DRDY for exactly this reason.
+        if (sr & (RNG_SR_SECS | RNG_SR_CECS)) {
+            // do not return anything!
+            mp_raise_OSError(MP_EFAULT);
+        }
+
+        if (sr & RNG_SR_DRDY) break;
+
         if (HAL_GetTick() - start >= RNG_TIMEOUT_MS) {
             // hardware failure... do not return anything!
             mp_raise_OSError(MP_EFAULT);
