@@ -136,6 +136,59 @@ Everything else that differed was treated as a bug in this fork and fixed —
 including base32's leniency, which turned out to be load-bearing: `teleport.py`
 decodes hand-typed passwords and relies on `0→O`, `1→L`, `8→B` remapping.
 
+## The EC math is ~12x slower, and that is fine
+
+trezor-crypto uses its own portable `bignum.c` where libngu used libsecp256k1
+with precomputed ecmult tables. Measured on the desktop simulator, both
+interpreters built `-Os`:
+
+| | libngu | trezor-crypto |
+|---|---|---|
+| `secp256k1.sign` x200 | 33 ms | 401 ms |
+| `HDNode.derive` x200 | 31 ms | 388 ms |
+
+Not a build artifact: SHA-256 is 24 ms vs 20 ms (trezor *faster*) and a pure
+Python loop is 8 ms vs 9 ms. It is specifically the field arithmetic.
+
+This is recorded so nobody re-derives it and panics. It does not matter:
+
+- Coldcard shipped trezor-crypto's EC math until v4.0.0, on hardware no faster
+  than an **80 MHz** Cortex-M4 (Mk3). Mk4/Mk5/Q are the same core at 120 MHz.
+  Not the same vendored commit as this one, but the same `bignum.c` approach.
+- The workload did not grow to compensate. `ownership.py` caps at 764 addresses
+  (`MAX_ADDRS_STORED`), builds once, caches to a file and already draws a
+  progress bar. Address Explorer renders 10 at a time.
+
+**Not measured on real hardware** — like everything else here.
+
+### Why not keep libsecp256k1 for the EC math?
+
+It is a fair question: libsecp256k1 is the most reviewed EC implementation in
+Bitcoin, and the vendored tree already carries the switch. `ecdsa.c` compiles
+every entry point as a dispatcher behind `USE_SECP256K1_ZKP_ECDSA`, which is
+trezor's own production configuration. Four of the five call sites in the shim
+would flip for free; signing would not, because it calls
+`tc_ecdsa_sign_digest_ex()` directly for the extra-nonce hook.
+
+Decided against, on these grounds:
+
+- **It would make `make diff` partly tautological.** Two independent
+  implementations agreeing byte-for-byte is the entire evidentiary basis of this
+  fork. Point both at libsecp256k1 and the ECDSA half compares a library to
+  itself.
+- It gives back the ~39 KB and reintroduces autotools plus the ecmult
+  precompute step into the ARM builds — the dependency whose removal is why the
+  change to COLDCARD's own sources is only 9 files.
+- The side-channel argument runs the *other* way. See the `ctx_rnd()` note in
+  `mod_secp256k1_tz.c`: libsecp256k1 blinds once per signing session,
+  `tc_ecdsa_sign_digest_ex()` blinds every signature.
+
+The one real argument for switching is that libsecp256k1 takes `ndata`
+natively, so `coldcard-changes.patch` could be deleted and the vendored copy
+would be byte-identical to upstream. Worth revisiting only if that patch ever
+becomes a problem on a vendor bump. It is additive and reversible; it will not
+soon.
+
 ## Layout
 
 | Path | What |
