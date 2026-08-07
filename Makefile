@@ -27,6 +27,15 @@ $(error BACKEND must be "tz" or "libngu", got "$(BACKEND)")
 endif
 SIM_BIN  := $(CURDIR)/external/micropython/ports/unix/$(SIM_MPY)
 
+# Matches BOTH interpreters (coldcard-mpy and coldcard-mpy-tz), because an
+# orphan of either one holding SIM_SOCK is the problem.
+#
+# Matched against the process NAME, never with pkill -f. -f matches full command
+# lines, which catches any shell that merely mentions the binary -- including the
+# shell running this recipe, and any terminal whose scrollback command contained
+# it. Killing those is worse than the orphan.
+SIM_PATTERN := ^coldcard-mpy
+
 # pysecp256k1 needs an explicit path to a shared libsecp256k1; see TESTING.md.
 export PYSECP_SO := $(CURDIR)/.local/lib/libsecp256k1.dylib
 
@@ -82,6 +91,14 @@ $(SIM_BIN): build
 sim-start: $(SIM_BIN)
 	@mkdir -p $(dir $(SIM_LOG))
 	@ln -sf $(SIM_BIN) $(SIM_DIR)/$(SIM_MPY)
+	@n=$$(pgrep "$(SIM_PATTERN)" 2>/dev/null | wc -l | tr -d ' '); \
+	if [ "$$n" -gt 1 ] || { [ "$$n" -eq 1 ] && [ ! -S $(SIM_SOCK) ]; }; then \
+		echo "ERROR: $$n stale simulator process(es) already running:"; \
+		pgrep -l "$(SIM_PATTERN)"; \
+		echo "  'make sim-stop' first. The log-based backend check below cannot"; \
+		echo "  see these, so reusing the socket would test an unknown backend."; \
+		exit 1; \
+	fi
 	@if [ ! -S $(SIM_SOCK) ]; then \
 		cd $(SIM_DIR) && COLDCARD_MPY=$(SIM_MPY) nohup $(PY) simulator.py --headless > $(SIM_LOG) 2>&1 < /dev/null & \
 		for i in $$(seq 1 40); do \
@@ -100,9 +117,25 @@ sim-start: $(SIM_BIN)
 	fi; \
 	echo "simulator up on $(SIM_SOCK)  [BACKEND=$(BACKEND) $(SIM_MPY)]"
 
+# Kill the wrapper AND the interpreter it spawned. Killing only the wrapper
+# leaves the mpy process alive still holding SIM_SOCK, so the next sim-start
+# reuses a simulator of whichever backend happened to survive -- and its guard
+# below reads the log, which describes the process that wrote it, not the one on
+# the socket. That is how a test run silently proves nothing.
 sim-stop:
-	@pkill -f "simulator.py --headless" 2>/dev/null && echo "simulator stopped" || echo "not running"
+	@pkill -f "simulator.py --headless" 2>/dev/null || true
+	@pkill "$(SIM_PATTERN)" 2>/dev/null || true
+	@for i in $$(seq 1 20); do \
+		pgrep "$(SIM_PATTERN)" >/dev/null 2>&1 || break; \
+		sleep 0.25; \
+	done
+	@pkill -9 "$(SIM_PATTERN)" 2>/dev/null || true
 	@rm -f $(SIM_SOCK)
+	@if pgrep "$(SIM_PATTERN)" >/dev/null 2>&1; then \
+		echo "ERROR: simulator processes survived SIGKILL:"; \
+		pgrep -l "$(SIM_PATTERN)"; exit 1; \
+	fi
+	@echo "simulator stopped"
 
 test:
 	@if [ ! -S $(SIM_SOCK) ]; then echo "ERROR: simulator not running; use 'make sim-start'"; exit 1; fi
