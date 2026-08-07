@@ -121,8 +121,19 @@ cd unix && ../ENV/bin/python simulator.py --headless
 ```
 
 Booted successfully when it prints `Start: mainline`; it listens on
-`/tmp/ckcc-simulator.sock`. Add `brew install xterm && brew install --cask
-xquartz` for the graphical window.
+`/tmp/ckcc-simulator.sock`.
+
+For the graphical screen on macOS use `--no-xterm` instead of `--headless`:
+
+```bash
+cd unix-tz && ../ENV/bin/python simulator.py --q1 --no-xterm
+```
+
+The simulated screen is SDL2, which is native Cocoa on macOS. Only upstream's
+REPL console is an xterm, i.e. an X11 app — so without `--no-xterm` you must
+install and run XQuartz purely to host a terminal, for a window macOS draws by
+itself. `--no-xterm` sends the firmware's output to your terminal instead.
+Upstream's XQuartz route still works if you prefer a separate REPL window.
 
 Poke libngu with no simulator at all — useful for crypto questions:
 

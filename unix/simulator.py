@@ -142,7 +142,7 @@ class LCDSimulator(SimulatedScreen):
         # GPU stuff needs to know implementation details... because it re-implements
         self.COL_BLACK = 0
         self.COL_WHITE = 0xffff
-        self.COL_FOREGROUND = 0xfd60     # brand orange (not byte-swapped here)
+        self.COL_FOREGROUND = 0x37e6     # FRANKENCARD green (not byte-swapped here)
         
 
     def vsync_handler(self, spriterenderer, window):
@@ -791,6 +791,17 @@ def start():
     else:
         is_headless = False
 
+    # --no-xterm: show the simulated screen, but do NOT wrap the interpreter in
+    # an xterm. The screen is SDL2, which is native Cocoa on macOS; only the
+    # REPL console needed X11, so without this you had to install and run
+    # XQuartz just to see a window macOS can draw by itself. The firmware's
+    # output goes to the terminal you launched from instead.
+    if "--no-xterm" in sys.argv:
+        sys.argv.remove("--no-xterm")
+        want_xterm = False
+    else:
+        want_xterm = True
+
     if is_headless:
         print("\nColdcard Simulator (headless). Output below is from the simulated system:\n\n")
     else:
@@ -969,10 +980,18 @@ Q1 specials:
 
         xterm_args.extend(['-l', '-lf', logfile])
 
-    xterm = subprocess.Popen(xterm_args + ['-e'] + cc_cmd,
-                                env=env,
-                                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                pass_fds=pass_fds, shell=False)
+    if want_xterm:
+        xterm = subprocess.Popen(xterm_args + ['-e'] + cc_cmd,
+                                    env=env,
+                                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                    pass_fds=pass_fds, shell=False)
+    else:
+        # No X11: run the interpreter directly and let its output land in this
+        # terminal. Named `xterm` because the code below poll()s and kill()s it.
+        xterm = subprocess.Popen(cc_cmd,
+                                    env=env,
+                                    stdin=subprocess.DEVNULL,
+                                    pass_fds=pass_fds, shell=False)
 
 
     # reopen as binary streams
