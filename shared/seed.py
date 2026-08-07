@@ -1192,7 +1192,7 @@ class EphemeralSeedMenu(MenuSystem):
             MenuItem("Import Words", menu=import_ephemeral_menu),
             MenuItem("Import XPRV", f=import_xprv, arg=True),  # ephemeral=True
             MenuItem("Tapsigner Backup", f=import_tapsigner_backup_file, arg=True), # ephemeral=True
-            MenuItem("Coldcard Backup", f=restore_backup, arg=True),  # tmp=True
+            MenuItem("Frankencard Backup", f=restore_backup, arg=True),  # tmp=True
             MenuItem("Restore Seed XOR", f=xor_restore_temporary),
         ]
 
@@ -1229,13 +1229,13 @@ or by typing numbers.'''
 You may add a passphrase to your BIP-39 seed words. \
 This creates an entirely new wallet, for every possible passphrase.
 
-By default, the Coldcard uses an empty string as the passphrase.\
+By default, the Frankencard uses an empty string as the passphrase.\
 %s\
 
 Please write down the fingerprint of all your wallets, so you can \
 confirm when you've got the right passphrase. (If you are writing down \
 the passphrase as well, it's okay to put them together.) There is no way for \
-the Coldcard to know if your entry is correct, and if you have it wrong, \
+the Frankencard to know if your entry is correct, and if you have it wrong, \
 you will be looking at an empty wallet.
 
 Limitations: %d characters max length, ASCII characters 32-126 (0x20-0x7e) only.

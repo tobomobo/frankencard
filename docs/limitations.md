@@ -32,9 +32,9 @@
 
 - with Electrum, we support classic payment addresses (p2pkh), Bech32 Segwit and P2SH/Segwit
     - however, each wallet must be of a single address type; cannot be mixed (their limitation)
-    - the same Coldcard could be used in each of the three modes (we don't care about address format)
+    - the same Frankencard could be used in each of the three modes (we don't care about address format)
 - with Bitcoin Core (version 0.17+), we can do PSBT transactions, which support all address types
-- we don't support signing coinbase transactions, so don't mine directly into a Coldcard wallet
+- we don't support signing coinbase transactions, so don't mine directly into a Frankencard wallet
 
 # Max Transaction Size
 
@@ -81,9 +81,9 @@
 ### BIP-67
 
 - importing multisig from PSBT can ONLY create `sortedmulti(...)` multisig according to BIP-67, DO NOT use with `multi(...)`
-- creating airgapped multisig using COLDCARD as coordinator always produces `sortedmulti(...)` multisig according to BIP-67
+- creating airgapped multisig using FRANKENCARD as coordinator always produces `sortedmulti(...)` multisig according to BIP-67
 - COLDCARD import/export [format](https://coldcard.com/docs/multisig/#configuration-text-file-for-multisig) only supports `sortedmulti(...)` multisig according to BIP-67. To import multisig wallet with `multi(...)` use descriptor import [format](https://github.com/bitcoin/bips/blob/master/bip-0383.mediawiki)
-- encrypted COLDCARD backups that contains multisig wallets with `multi(...)` MUST only be restored on firmware versions with `multi(...)` support
+- encrypted FRANKENCARD backups that contains multisig wallets with `multi(...)` MUST only be restored on firmware versions with `multi(...)` support
 - all imported `multi(...)` must differ in keys (same as `sortedmulti(...)`). If `wsh(multi(2,A,B))` is already registered, `wsh(multi(2,B,A))` will be rejected upon import as duplicate, even thought they are actually different script/wallet.
 - just BIP67 difference is also treated as duplicate. If `wsh(multi(2,A,B)` is registered, `wsh(sortedmulti(2,A,B))` will be rejected as duplicate and vice-versa.
 
@@ -102,11 +102,11 @@
 # U2F Protocol / Web Access to USB / WebUSB
 
 - we do not support U2F protocol, WebUSB or any other means for random websites to talk to us
-- only native desktop/mobile apps, or helpers for those, will be able to talk USB to Coldcard
+- only native desktop/mobile apps, or helpers for those, will be able to talk USB to Frankencard
 
 # Fee Limits / Warnings
 
-- Coldcard will, by default, reject any txn that pays a fee of more than 10% of its total
+- Frankencard will, by default, reject any txn that pays a fee of more than 10% of its total
   value to miners. This limit is a setting: 10% (default), 25%, 50% or 'no limit'.
 - Fees over 5% (was 1%) are shown as warnings.
 

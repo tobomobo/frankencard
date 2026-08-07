@@ -901,7 +901,7 @@ def test_custom_pushtx_url(goto_home, pick_menu_item, press_select, enter_comple
     title, story = cap_story()
     if title == "PUSH TX":
         assert "immediately broadcast" in story
-        assert "tap any NFC-enabled phone on the COLDCARD" in story
+        assert "tap any NFC-enabled phone on the FRANKENCARD" in story
         assert "choose a provider by URL here, or give your own URL" in story
         assert "transaction details could be linked by the service" in story
         press_select()

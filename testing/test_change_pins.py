@@ -118,7 +118,7 @@ def change_pin(cap_screen, cap_story, cap_menu, press_select, my_enter_pin, pres
         # use standard menus and UX to change a PIN
         title, story = cap_story()
         assert title == hdr_text
-        assert "changing the main PIN used to unlock your Coldcard" in story
+        assert "changing the main PIN used to unlock your Frankencard" in story
         assert "ABSOLUTELY NO WAY TO RECOVER A FORGOTTEN PIN!" in story
         assert "Write it down" in story
         press_select()

@@ -760,7 +760,7 @@ def test_send_backup(testcase, rx_start, tx_start, cap_menu, enter_complex, pick
         notes = make_big_notes()
 
     # other contents require other features to be enabled
-    pick_menu_item('Full COLDCARD Backup')
+    pick_menu_item('Full FRANKENCARD Backup')
 
     title, body = cap_story()
 

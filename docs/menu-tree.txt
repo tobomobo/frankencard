@@ -25,11 +25,11 @@
     [SEED WORD ENTRY]
     Scan QR Code [IF QR SCANNER]
     Restore Backup
-    Clone Coldcard
+    Clone Frankencard
     Import XPRV
     Tapsigner Backup
     Seed XOR
-  Migrate Coldcard
+  Migrate Frankencard
   Key Teleport (start)
   Help
   Advanced/Tools
@@ -48,7 +48,7 @@
         Import via NFC [IF NFC ENABLED]
       Import XPRV
       Tapsigner Backup
-      Coldcard Backup
+      Frankencard Backup
       Restore Seed XOR
     Upgrade Firmware [IF NOT TMP SEED]
       Show Version
@@ -240,7 +240,7 @@
       Backup System
       Verify Backup
       Restore Backup
-      Clone Coldcard
+      Clone Frankencard
     Export Wallet
       Sparrow
       Cove
@@ -308,7 +308,7 @@
       NFC File Share [IF NFC ENABLED]
       BBQr File Share [IF QR SCANNER]
       QR File Share [IF QR SCANNER]
-      Clone Coldcard
+      Clone Frankencard
       Format SD Card
       Format RAM Disk [IF VIRTDISK ENABLED]
     Secure Notes & Passwords [IF QWERTY KEYBOARD]
@@ -351,7 +351,7 @@
         Import via NFC [IF NFC ENABLED]
       Import XPRV
       Tapsigner Backup
-      Coldcard Backup
+      Frankencard Backup
       Restore Seed XOR
     Key Teleport (start)
     Spending Policy [IF SECRET AND NOT TMP SEED]
@@ -482,7 +482,7 @@
         "CC-2-of-4"
         View Details
         Delete
-        Coldcard Export
+        Frankencard Export
         Electrum Wallet
         Descriptors
           View Descriptor
@@ -696,7 +696,7 @@
         Import via NFC [IF NFC ENABLED]
       Import XPRV
       Tapsigner Backup
-      Coldcard Backup
+      Frankencard Backup
       Restore Seed XOR
     Paper Wallets
     WIF Store

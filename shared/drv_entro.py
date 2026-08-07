@@ -30,10 +30,10 @@ or formatted in other ways to make it easy to import into \
 other wallet systems.
 
 You can recreate this value later, based \
-only on the seed-phrase or backup of this Coldcard.
+only on the seed-phrase or backup of this Frankencard.
 
 There is no way to reverse the process, should the other wallet system be compromised, \
-so the other wallet is effectively segregated from the Coldcard and yet \
+so the other wallet is effectively segregated from the Frankencard and yet \
 still backed-up.''')
     if ch != 'y': return
 

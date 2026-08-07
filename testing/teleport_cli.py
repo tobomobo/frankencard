@@ -67,7 +67,7 @@ def main():
               help='Ephemeral private key used to create shared ECDH key')
 def recv_init(secret):
     number_pass, enc_pubkey, kp_receiver = receiver_step1(secret=secret)
-    msg = (f'To receive sensitive data from another COLDCARD,'
+    msg = (f'To receive sensitive data from another FRANKENCARD,'
            f'share this Receiver Password with sender:\n\t{number_pass}'
            f'  =  {txt_grouper(number_pass)}')
 

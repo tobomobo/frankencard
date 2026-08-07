@@ -115,7 +115,7 @@ async def web2fa_enroll(ss=None):
     #  - can't fit any metadata, like username or our serial # in there
     # - better on Q1 where no limitations for this size of QR
 
-    nm = 'COLDCARD' if has_qr else 'CC'     # must be url-safe
+    nm = 'FRANKENCARD' if has_qr else 'CC'     # must be url-safe
     qr = 'otpauth://totp/{nm}?secret={ss}'.format(ss=ss, nm=nm)
 
     while 1:
@@ -124,7 +124,7 @@ async def web2fa_enroll(ss=None):
                            force_msg=True)
 
         # important: force them to prove they stored it correctly
-        ok = await perform_web2fa('Enroll: COLDCARD', ss)
+        ok = await perform_web2fa('Enroll: FRANKENCARD', ss)
         if ok: break
 
         ch = await ux_show_story("That isn't correct. Please re-import and/or "

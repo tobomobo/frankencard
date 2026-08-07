@@ -5,10 +5,10 @@
 
 
 Temporary seed (renamed in `5.2.0` from Ephemeral seed) is a temporary secret completely separate 
-from the master seed, typically held in **COLDCARD<sup>&reg;</sup>** RAM and 
+from the master seed, typically held in **FRANKENCARD** RAM and 
 not persisted between reboots in the Secure Element.
 Temporary seeds *completely* defeat the design
-of Coldcard's security model, based on secure elements.
+of Frankencard's security model, based on secure elements.
 Enable the `Seed Vault` feature to store these secrets longer-term.
 Read more about `Seed Vault` feature below.
 
@@ -57,9 +57,9 @@ Read more about `Seed Vault` feature below.
 * BIP-39 passphrase is from version `5.2.0` handled internally as temporary seed
 
 
-Ability to generate and use **Temporary seed** is available on Coldcard when:
+Ability to generate and use **Temporary seed** is available on Frankencard when:
 
-1. no PIN chosen and no secret chosen (newly unpacked Coldcard)
+1. no PIN chosen and no secret chosen (newly unpacked Frankencard)
 2. PIN set up but no secret chosen yet
 3. with both PIN and secret already picked
 
@@ -68,14 +68,14 @@ Ability to generate and use **Temporary seed** is available on Coldcard when:
 
 [_(new in v5.2.0, requires Mk4, Mk5, or Q)_](upgrade.md)
 
-From version `5.2.0` users no longer need to reboot COLDCARD to return
-to their "master seed" (one stored in SE2). Once COLDCARD has temporary
+From version `5.2.0` users no longer need to reboot FRANKENCARD to return
+to their "master seed" (one stored in SE2). Once FRANKENCARD has temporary
 seed active, first item in home menu is `[xfp]` and is a clone of `Ready To Sign`.
 Last item in home menu is `Restore Master`.
 
-`Restore Master` offers two options. First, if user presses OK, COLDCARD wipes temporary seed settings
+`Restore Master` offers two options. First, if user presses OK, FRANKENCARD wipes temporary seed settings
 and switches back to master seed and its settings.
-If user presses (1) temporary seed settings are preserved for later use and COLDCARD only switches
+If user presses (1) temporary seed settings are preserved for later use and FRANKENCARD only switches
 back to master seed and its settings.
 
 If current temporary seed is also saved in Seed Vault, option to wipe settings is not available.

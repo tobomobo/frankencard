@@ -602,15 +602,15 @@ class TrickPinMenu(MenuSystem):
             StoryMenuItem('BIP-85 Wallet #1', b85, arg=dbase+1, flags=TC_WORD_WALLET),
             StoryMenuItem('BIP-85 Wallet #2', b85, arg=dbase+2, flags=TC_WORD_WALLET),
             StoryMenuItem('BIP-85 Wallet #3', b85, arg=dbase+3, flags=TC_WORD_WALLET),
-            StoryMenuItem('Legacy Wallet', "Uses duress wallet created on Mk3 Coldcard, using a fixed derivation.\n\nRecommended only for existing UTXO compatibility.", flags=TC_XPRV_WALLET),
+            StoryMenuItem('Legacy Wallet', "Uses duress wallet created on Mk3 Frankencard, using a fixed derivation.\n\nRecommended only for existing UTXO compatibility.", flags=TC_XPRV_WALLET),
         ]
         self.WillWipeMenu = MenuSystem([
             #              xxxxxxxxxxxxxxxx
-            StoryMenuItem('Wipe & Reboot', "Seed is wiped and Coldcard reboots without notice.",
+            StoryMenuItem('Wipe & Reboot', "Seed is wiped and Frankencard reboots without notice.",
                             flags=TC_WIPE|TC_REBOOT),
-            StoryMenuItem('Silent Wipe', "Seed is silently wiped and Coldcard acts as if PIN code was just wrong.",
+            StoryMenuItem('Silent Wipe', "Seed is silently wiped and Frankencard acts as if PIN code was just wrong.",
                             flags=TC_WIPE|TC_FAKE_OUT),
-            StoryMenuItem('Wipe -> Wallet', "Seed is silently wiped, and Coldcard logs into a duress wallet. Select type of wallet on next menu.", menu=DuressOptions),
+            StoryMenuItem('Wipe -> Wallet', "Seed is silently wiped, and Frankencard logs into a duress wallet. Select type of wallet on next menu.", menu=DuressOptions),
             StoryMenuItem('Say Wiped, Stop', "Seed is wiped and a message is shown.",
                             flags=TC_WIPE),
         ])
@@ -635,7 +635,7 @@ class TrickPinMenu(MenuSystem):
             StoryMenuItem('Duress Wallet', "Goes directly to a specific duress wallet. No side effects.", menu=DuressOptions),
             StoryMenuItem('Login Countdown', "Pretends a login countdown timer (%s) is in effect. Can wipe seed or brick system or do nothing." % lgto_map[def_to].strip(),
                     menu=countdown_menu),
-            StoryMenuItem('Look Blank', "Look and act like a freshly- wiped Coldcard but don't affect actual seed.", flags=TC_BLANK_WALLET),
+            StoryMenuItem('Look Blank', "Look and act like a freshly- wiped Frankencard but don't affect actual seed.", flags=TC_BLANK_WALLET),
             StoryMenuItem('Just Reboot', "Reboot when this PIN is entered. Doesn't do anything else.", flags=TC_REBOOT),
             StoryMenuItem('Delta Mode', '''\
 Advanced! Logs into REAL seed and allows attacker to do most things, \
@@ -658,8 +658,8 @@ differ only in final 4 positions (ignoring dash).\
     async def set_any_wrong(self, *a):
         ch = await ux_show_story('''\
 After N incorrect PIN attempts, this feature will be triggered. It can wipe \
-the seed phrase, and/or brick the Coldcard. Regardless of this (or any other \
-setting) the Coldcard will always brick after 13 failed PIN attempts.''')
+the seed phrase, and/or brick the Frankencard. Regardless of this (or any other \
+setting) the Frankencard will always brick after 13 failed PIN attempts.''')
         if ch == 'x': return
 
         self.proposed_pin = WRONG_PIN_CODE
@@ -678,9 +678,9 @@ setting) the Coldcard will always brick after 13 failed PIN attempts.''')
             MenuItem('[%s WRONG PIN]' % rel),
             StoryMenuItem('Wipe, Stop', "Seed is wiped and a message is shown.",
                           arg=num, flags=TC_WIPE),
-            StoryMenuItem('Wipe & Reboot', "Seed is wiped and Coldcard reboots without notice.",
+            StoryMenuItem('Wipe & Reboot', "Seed is wiped and Frankencard reboots without notice.",
                           arg=num, flags=TC_WIPE|TC_REBOOT),
-            StoryMenuItem('Silent Wipe', "Seed is silently wiped and Coldcard acts as if PIN code was just wrong.",
+            StoryMenuItem('Silent Wipe', "Seed is silently wiped and Frankencard acts as if PIN code was just wrong.",
                           arg=num, flags=TC_WIPE|TC_FAKE_OUT),
             StoryMenuItem('Brick Self', "Become a brick instantly and forever.",
                           arg=num, flags=TC_BRICK,),
@@ -876,7 +876,7 @@ so you may perform transactions with it.''')
         pin, flags, arg = item.arg
         if flags & TC_XPRV_WALLET:
             msg = '''The legacy duress wallet will be activated if '%s' is provded. \
-You probably created this on an older Mk2 or Mk3 Coldcard. \
+You probably created this on an older Mk2 or Mk3 Frankencard. \
 Wallet is XPRV-based and derived from a fixed path.''' % pin
         elif flags & TC_WORD_WALLET:
             nwords = 12 if (arg // 1000 == 2) else 24

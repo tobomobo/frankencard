@@ -1,4 +1,4 @@
-# NFC and Coldcard
+# NFC and Frankencard
 
 (Applies to NFC-equipped models: Mk4, Mk5, and Q)
 
@@ -16,7 +16,7 @@ The NFC antenna location depends on the hardware:
 
 Before using NFC,
 it is important to locate the position of NFC antenna on your device and point it 
-correctly towards the Coldcard NFC antenna. Picture below shows an example with iPhone
+correctly towards the Frankencard NFC antenna. Picture below shows an example with iPhone
 that has NFC antenna located at the top right edge. The NFC smartphone antenna 
 can be positioned almost anywhere on the device, but mostly on the top, middle, 
 or bottom of the back side of the phone, and it is rarely indicated on the phone case. 
@@ -46,7 +46,7 @@ in general. Good interoperability is critical with radio standards.
 
 ## Lower Layers
 
-The Coldcard has a chip that acts as a Type 5 NFC tag.  The
+The Frankencard has a chip that acts as a Type 5 NFC tag.  The
 radio standard is called "NFC-V" or ISO-15693, and operates on a
 13.56 Mhz carrier wave.
 
@@ -60,13 +60,13 @@ records.
 
 ## Security
 
-All NFC features of the Coldcard can be disabled from the settings
+All NFC features of the Frankencard can be disabled from the settings
 menu, and when that is done, the tag chip is completely disabled,
-and there is no way to probe, detect or access the Coldcard over
+and there is no way to probe, detect or access the Frankencard over
 RF. Even when NFC features are enabled, we keep the tag chip disabled
 unless we are actively sharing something. We disable the "energy
 harvesting" features of the chip, so it will not do anything when
-the Coldcard is powered-down, regardless of the NFC setting.
+the Frankencard is powered-down, regardless of the NFC setting.
 
 If the above is not enough for you, the antenna can be destroyed:
 
@@ -77,7 +77,7 @@ If the above is not enough for you, the antenna can be destroyed:
 - **Q1**: cut the trace labeled "NFC DATA" under the batteries.
 
 The NFC traffic is not encrypted and is subject to eavesdropping.
-While the NFC feature is active, your Coldcard can be uniquely
+While the NFC feature is active, your Frankencard can be uniquely
 identified because the NFC protocol requires a unique ID (64 bits)
 that is defined by the NFC tag chip and shared automatically as
 part of the anti-collision protocol. Again, that happens only during
@@ -86,7 +86,7 @@ active transfers, not when idle.
 ## Desktop Testing
 
 Most USB-powered desktop contactless card readers will not work
-with the Coldcard because they do not implement NFC-V (ISO-15693).
+with the Frankencard because they do not implement NFC-V (ISO-15693).
 Instead they are doing ISO-14443A or B.
 
 Smartphones, on the other hand, all support NFC-V and they are the
@@ -120,7 +120,7 @@ prefix of `urn:nfc:ext:`
 
 ## General QR Replacement
 
-Anytime there is a QR displayed on the Coldcard screen, you can
+Anytime there is a QR displayed on the Frankencard screen, you can
 press (3) and the same data will be shared over NFC. In these cases,
 it will be shared as a simple text record, regardless of the content.
 
@@ -133,7 +133,7 @@ words after enough warning screens.
 
 ## Payment Address
 
-This is typically a deposit address, generated on the Coldcard via
+This is typically a deposit address, generated on the Frankencard via
 the address explorer. We share these by themselves as simple text
 records for max compatibility.
 
@@ -152,7 +152,7 @@ on (such as a PSBT file after signing).
 
 ## Text Label
 
-Coldcard's first record will be a simple text record (English, UTF-8) that
+Frankencard's first record will be a simple text record (English, UTF-8) that
 describes what is being shared.
 
 Type: urn:nfc:wkt:T  (standard text)
@@ -163,7 +163,7 @@ Consider this a title for what's being offered for sharing purposes.
 
 ## SHA256 Checksum
 
-When the Coldcard is sharing a larger object, such as a PSBT file,
+When the Frankencard is sharing a larger object, such as a PSBT file,
 we know the SHA256 of that object, so we share that as well. This value can
 be ignored or used for end-to-end error detection. It does not
 protect against tampering.
@@ -210,7 +210,7 @@ Type: `urn:nfc:ext:bitcoin.org:txn`
 Body: Binary, variable length. First four bytes will typically be
 `0x02 0x00 0x00 0x00` (version number two, in LE32).
 
-When the Coldcard has signed and finalized a transaction, it can
+When the Frankencard has signed and finalized a transaction, it can
 share it in this format. Typically the user will want to broadcast
 this new transaction on the Bitcoin P2P network.
 

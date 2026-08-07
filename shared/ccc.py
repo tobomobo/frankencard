@@ -7,7 +7,7 @@
 # - "CCC" (was "ColdCard Cosigning") will now be branded as "Spending Policy: Multisig" 
 # - single singer policies will be called "Spending Policy: Single Sig"
 # - internally: CCC is the multisig stuff, vs SSSP: Single Signer Spending Policy
-# - "hobbled" refers to less-than full control over Coldcard, even though you have main PIN
+# - "hobbled" refers to less-than full control over Frankencard, even though you have main PIN
 #
 import gc, chains, version, ngu, web2fa, bip39, re
 from ubinascii import hexlify as b2a_hex
@@ -463,7 +463,7 @@ class CCCConfigMenu(MenuSystem):
         the_ux.pop()
 
     async def export_xpub_c(self, *a):
-        # do standard Coldcard export for multisig setups
+        # do standard Frankencard export for multisig setups
         xfp = CCCFeature.get_xfp()
         enc = CCCFeature.get_encoded_secret()
 
@@ -473,10 +473,10 @@ class CCCConfigMenu(MenuSystem):
     async def build_2ofN(self, m, l, i):
         count = i.arg
         # ask for a key B, assume A and C are defined => export MS config and import into self.
-        # - like the airgap setup, but assume A and C are this Coldcard
-        m = '''Builds simple 2-of-N multisig wallet, with this Coldcard's main secret (key A), \
+        # - like the airgap setup, but assume A and C are this Frankencard
+        m = '''Builds simple 2-of-N multisig wallet, with this Frankencard's main secret (key A), \
 the CCC policy-controlled key C, and at least one other device, as key B. \
-\nYou will need to export the XPUB from another Coldcard and place it on an SD Card, or \
+\nYou will need to export the XPUB from another Frankencard and place it on an SD Card, or \
 be ready to show it as a QR, before proceeding.'''
         if await ux_show_story(m) != 'y':
             return
@@ -503,7 +503,7 @@ be ready to show it as a QR, before proceeding.'''
         # - one-way trip because the CCC feature won't be enabled inside the temp seed settings
         if await ux_show_story(
             'Loads the CCC controlled seed (key C) as a Temporary Seed and allows '
-            'easy use of all Coldcard features on that key.\n\nIf you save into Seed Vault, '
+            'easy use of all Frankencard features on that key.\n\nIf you save into Seed Vault, '
             'access to CCC Config menu is quick and easy.') != 'y':
             return
 
@@ -859,7 +859,7 @@ async def gen_or_import():
     from seed import WordNestMenu, generate_seed, approve_word_list, SeedVaultChooserMenu
 
     msg = "Press %s to generate a new 12-word seed phrase to be used "\
-          "as the Coldcard Co-Signing Secret (key C).\n\nOr press (1) to import existing "\
+          "as the Frankencard Co-Signing Secret (key C).\n\nOr press (1) to import existing "\
           "12-words or (2) for 24-words import." % OK
 
     if settings.master_get("seedvault", False):
@@ -915,16 +915,16 @@ async def toggle_ccc_feature(*a):
     # - lock that down
     # - TODO copy
     ch = await ux_show_story('''\
-Adds an additional seed to your Coldcard, and enforces a "spending policy" whenever \
+Adds an additional seed to your Frankencard, and enforces a "spending policy" whenever \
 it signs with that key. Spending policies can restrict: magnitude (BTC out), \
 velocity (blocks between txn), address whitelisting, and/or require confirmation by 2FA phone app.
 
 Assuming the use of a 2-of-3 multisig wallet, keys are as follows:\n
-A=Coldcard (master seed), B=Backup Key (offline/recovery), C=Spending Policy Key. 
+A=Frankencard (master seed), B=Backup Key (offline/recovery), C=Spending Policy Key. 
 
 Spending policy cannot be viewed or changed without knowledge of key C.\
 ''',
-        title="Coldcard Co-Signing" if version.has_qwerty else 'CC Co-Sign')
+        title="Frankencard Co-Signing" if version.has_qwerty else 'CC Co-Sign')
 
     if ch != 'y': 
         # just a tourist
@@ -1090,7 +1090,7 @@ Spending policies can restrict: magnitude (BTC out), \
 velocity (blocks between txn), address whitelisting, \
 and/or require confirmation by 2FA phone app.
 
-When active, your COLDCARD \
+When active, your FRANKENCARD \
 is locked into a special mode that restricts seed access, backups, settings and other features.
 
 First step is to define a new PIN code that is used when you want to bypass or \
@@ -1235,7 +1235,7 @@ class SSSPConfigMenu(MenuSystem):
         bypass_pin = tp.has_sp_unlock()
 
         if not bypass_pin:
-            msg = "You have no Spending Policy bypass PIN defined, so changes to this COLDCARD cannot be made past this point. Only option will be to destroy seed and reload everything."
+            msg = "You have no Spending Policy bypass PIN defined, so changes to this FRANKENCARD cannot be made past this point. Only option will be to destroy seed and reload everything."
         else:
             msg = "To return to normal unlimited spending mode, you will need to enter the special pin (%s), then the Main PIN" % bypass_pin
             if sssp_spending_policy('words'):
@@ -1258,7 +1258,7 @@ class SSSPConfigMenu(MenuSystem):
 
     async def test_drive(self, *a):
         # allow test drive of feature
-        if not await ux_confirm("See what COLDCARD operation will look like with Spending Policy enabled.", 'CONTINUE?'):
+        if not await ux_confirm("See what FRANKENCARD operation will look like with Spending Policy enabled.", 'CONTINUE?'):
             return
 
         from pincodes import pa

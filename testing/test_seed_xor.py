@@ -91,7 +91,7 @@ def restore_seed_xor(set_seed_words, goto_home, pick_menu_item, cap_story,
         title, body = cap_story()
         assert 'you have a seed already' in body
         if incl_self:
-            assert '(1) to include this Coldcard' in body
+            assert '(1) to include this Frankencard' in body
             need_keypress('1')
         else:
             press_select()
@@ -338,7 +338,7 @@ def test_import_zero_set(num_words, goto_home, pick_menu_item, cap_story, need_k
 
     title, body = cap_story()
     assert 'you have a seed already' in body
-    assert '(1) to include this Coldcard' in body
+    assert '(1) to include this Frankencard' in body
     press_select()
 
     #time.sleep(0.01)
@@ -527,7 +527,7 @@ def test_seed_vault_xor(num_words, num_parts, incl_self, goto_eph_seed_menu, see
     title, body = cap_story()
     assert 'you have a seed already' in body
     if incl_self:
-        assert '(1) to include this Coldcard' in body
+        assert '(1) to include this Frankencard' in body
         need_keypress('1')
         words.append(get_secrets()["mnemonic"].split())
     else:

@@ -1,6 +1,6 @@
-# Developing on COLDCARD
+# Developing on FRANKENCARD
 
-Yes, external developers can modify COLDCARD and make their own versions!
+Yes, external developers can modify FRANKENCARD and make their own versions!
 
 ## Approaches
 
@@ -19,7 +19,7 @@ Yes, external developers can modify COLDCARD and make their own versions!
   this delay/warning could be avoided, but that is no longer the case.
 - you can distribute your DFU file to the world, but everyone who runs it will see above warning
 - remember the main PIN has to be set and provided correctly before new firmware can be installed
-- your COLDCARD will be bricked if your code crashes before it gets running "enough" that you
+- your FRANKENCARD will be bricked if your code crashes before it gets running "enough" that you
   can upload a corrected version. Bugs in the boot & login sequence are fatal in that sense.
 
 ### Medium Core
@@ -44,13 +44,13 @@ screen:
 
 ![warning screen](dev-warning.png)
 
-But it will be shown if the COLDCARD finds its flash checksum does
+But it will be shown if the FRANKENCARD finds its flash checksum does
 not match the checksum held in SE1, secured by the main PIN. This
 can be false positive, but in Mk4 we've worked hard to avoid those cases.
 
 A checksum error on the firmware itself (the main code) will always
 fail with a "(lemon icon) Firmware?" screen. The broken firmware is not
-started, but it's possible to recover the COLDCARD using a firmware loaded
+started, but it's possible to recover the FRANKENCARD using a firmware loaded
 from an SD Card.
 
 You cannot load *new* code via the SD Card firmware recovery mode.

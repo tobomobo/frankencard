@@ -994,7 +994,7 @@ def test_no_keys(wif_store, subpaths, fake_txn, settings_set, start_sign,
     if wif_store is False and subpaths is False:
         assert "PSBT does not contain any key path information" in story
     else:
-        assert "None of the keys involved in this transaction belong to this Coldcard" in story
+        assert "None of the keys involved in this transaction belong to this Frankencard" in story
 
 
 def test_unrelated_wif_does_not_allow_presigned_foreign_psbt(fake_txn, settings_set,
@@ -1014,7 +1014,7 @@ def test_unrelated_wif_does_not_allow_presigned_foreign_psbt(fake_txn, settings_
     start_sign(po.as_bytes(), finalize=False)
     title, story = cap_story()
     assert title == "Failure"
-    assert "None of the keys involved in this transaction belong to this Coldcard" in story
+    assert "None of the keys involved in this transaction belong to this Frankencard" in story
 
 
 @pytest.mark.bitcoind

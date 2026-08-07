@@ -35,7 +35,7 @@ def _clone(source, target):
     sim_target.start(start_wait=6)
     device = ColdcardDevice(is_simulator=True)
     _pick_menu_item(device, target_is_Q, "Import Existing")
-    _pick_menu_item(device, target_is_Q, "Clone Coldcard")
+    _pick_menu_item(device, target_is_Q, "Clone Frankencard")
     time.sleep(.1)
     title, story = _cap_story(device)
     assert f"Insert a MicroSD card and press {'ENTER' if target_is_Q else 'OK'} to start" in story
@@ -43,7 +43,7 @@ def _clone(source, target):
     _press_select(device, target_is_Q)
     time.sleep(.1)
     title, story = _cap_story(device)
-    assert "Keep power on this Coldcard, and take MicroSD card to source Coldcard" in story
+    assert "Keep power on this Frankencard, and take MicroSD card to source Frankencard" in story
     assert f"Bring that card back and press {'ENTER' if target_is_Q else 'OK'} to complete clone process" in story
 
     # SOURCE
@@ -56,11 +56,11 @@ def _clone(source, target):
     time.sleep(.1)
     _pick_menu_item(device_source, source_is_Q, "Backup")
     time.sleep(.1)
-    _pick_menu_item(device_source, source_is_Q, "Clone Coldcard")
+    _pick_menu_item(device_source, source_is_Q, "Clone Frankencard")
     time.sleep(2)
     title, story = _cap_story(device_source)
     assert "Done" in story
-    assert "Take this MicroSD card back to other Coldcard and continue from there" in story
+    assert "Take this MicroSD card back to other Frankencard and continue from there" in story
     _press_select(device_source, source_is_Q)
     sim_source.stop()
 

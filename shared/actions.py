@@ -35,7 +35,7 @@ async def show_bag_number(*a):
     bn = callgate.get_bag_number() or 'UNBAGGED!'
 
     await ux_show_story('''\
-Your new Coldcard should have arrived SEALED in a bag with the above number. Please take a moment to confirm the number and look for any signs of tampering.
+Your new Frankencard should have arrived SEALED in a bag with the above number. Please take a moment to confirm the number and look for any signs of tampering.
 
 Take pictures and contact support@coinkite if you have concerns.''', title=bn)
 
@@ -182,7 +182,7 @@ async def dev_enable_protocol(*a):
     # Mk3 and earlier
     cur = pyb.usb_mode()
     if cur and 'HID' in cur:
-        await ux_show_story('Coldcard USB protocol is already enabled (HID mode)')
+        await ux_show_story('Frankencard USB protocol is already enabled (HID mode)')
         return
 
     if settings.get('du', 0):
@@ -300,7 +300,7 @@ The prefix part determines the anti-phishing words you will \
 see each time you login.
 
 Your new PIN protects access to 
-this Coldcard device and is not a factor in the wallet's \
+this Frankencard device and is not a factor in the wallet's \
 seed words or private keys.
 
 THERE IS ABSOLUTELY NO WAY TO RECOVER A FORGOTTEN PIN! Write it down.
@@ -309,7 +309,7 @@ THERE IS ABSOLUTELY NO WAY TO RECOVER A FORGOTTEN PIN! Write it down.
 
     while 1:
         ch = await ux_show_story('''\
-There is ABSOLUTELY NO WAY to 'reset the PIN' or 'factory reset' the Coldcard if you forget the PIN.
+There is ABSOLUTELY NO WAY to 'reset the PIN' or 'factory reset' the Frankencard if you forget the PIN.
 
 DO NOT FORGET THE PIN CODE.
 
@@ -463,7 +463,7 @@ async def pick_nickname(*a):
     nick = s.get(k, '')
 
     if not nick:
-        ch = await ux_show_story("You can give this Coldcard a nickname"
+        ch = await ux_show_story("You can give this Frankencard a nickname"
                                  " and it will be shown before login.")
         if ch != 'y': return
 
@@ -848,7 +848,7 @@ async def start_login_sequence():
             await block_until_login()
 
     except BaseException as exc:
-        # Robustness: any logic errors/bugs in above will brick the Coldcard
+        # Robustness: any logic errors/bugs in above will brick the Frankencard
         # even for legit owner, since they can't login. So try to recover, when it's
         # safe to do so. Remember the bootrom checks PIN on every access to
         # the secret, so "letting" them past this point is harmless if they don't know
@@ -1136,7 +1136,7 @@ def electrum_export_story(noun="Electrum", background=False):
     # saves memory being in a function
     return ('''\
 This saves a skeleton %s wallet file. \
-You can then open that file in the wallet without ever connecting this Coldcard to a computer.\n
+You can then open that file in the wallet without ever connecting this Frankencard to a computer.\n
 ''' % noun
         + (background or 'Choose an address type for the wallet on the next screen.'+PICK_ACCOUNT)
         + SENSITIVE_NOT_SECRET)
@@ -1289,7 +1289,7 @@ async def bitcoin_core_skeleton(*A):
     ch = await ux_show_story('''\
 This saves commands and instructions into a file, including the public keys (xpub). \
 You can then run the commands in Bitcoin Core's console window, \
-without ever connecting this Coldcard to a computer.\
+without ever connecting this Frankencard to a computer.\
 ''' + PICK_ACCOUNT + SENSITIVE_NOT_SECRET, escape='1')
 
     acct = 0
@@ -1329,7 +1329,7 @@ async def generic_skeleton(*A):
     # basically all useful XPUB's in it.
     prompt = '''\
 Saves JSON file, with XPUB values that are needed to watch typical \
-single-signer UTXO associated with this Coldcard.'''
+single-signer UTXO associated with this Frankencard.'''
 
     await _generic_export(prompt, 'Generic Export', 'coldcard-export.json')
 
@@ -1351,7 +1351,7 @@ async def wasabi_skeleton(*A):
 
     ch = await ux_show_story('''\
 This saves a skeleton Wasabi wallet file. \
-You can then open that file in Wasabi without ever connecting this Coldcard to a computer.\
+You can then open that file in Wasabi without ever connecting this Frankencard to a computer.\
 ''' + SENSITIVE_NOT_SECRET)
     if ch != 'y':
         return
@@ -1508,7 +1508,7 @@ async def bkpw_override(*A):
     while True:
         pwd = settings.get("bkpw", None)
 
-        msg = ("Password used to encrypt COLDCARD backup files."
+        msg = ("Password used to encrypt FRANKENCARD backup files."
                "\n\nPress (0) to change backup password")
         esc = "0"
         if pwd:
@@ -2000,7 +2000,7 @@ async def ready2sign(*a):
         title = None
 
     if not choices:
-        msg = '''Coldcard is ready to sign spending transactions!
+        msg = '''Frankencard is ready to sign spending transactions!
 
 Put the proposed transaction onto MicroSD card \
 in PSBT format (Partially Signed Bitcoin Transaction) \
@@ -2105,7 +2105,7 @@ async def main_pin_changer(*a):
     lll = LoginUX()
     title = 'Main PIN'
     msg = '''\
-You will be changing the main PIN used to unlock your Coldcard.
+You will be changing the main PIN used to unlock your Frankencard.
 
 THERE IS ABSOLUTELY NO WAY TO RECOVER A FORGOTTEN PIN!\n
 Write it down.'''
@@ -2213,7 +2213,7 @@ async def show_version(*a):
         hw += ' (no NFC)'
 
     msg = '''\
-Coldcard Firmware
+Frankencard Firmware
 
   {rel}
   {built}
@@ -2484,7 +2484,7 @@ async def pushtx_setup_menu(*a):
         # force a warning on them, unless they are already doing it.
         ch = await ux_show_story(
             "When this is enabled, immediately after transaction signing, you can "
-            "tap any NFC-enabled phone on the COLDCARD and your newly-signed "
+            "tap any NFC-enabled phone on the FRANKENCARD and your newly-signed "
             "transaction will be immediately broadcast on the public network.\n\n"
             "You must choose a provider by URL here, or give your own URL. "
             "\n\nYour phone's IP address vs. transaction details could be linked by the service. "

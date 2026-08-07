@@ -2,13 +2,13 @@
 
 This special mode will stop you from signing transactions if they
 exceed a spending policy you define beforehand. Once enabled, many
-features of the COLDCARD are disabled or inaccessible.
+features of the FRANKENCARD are disabled or inaccessible.
 
-You might want to use this feature when traveling with your COLDCARD.
+You might want to use this feature when traveling with your FRANKENCARD.
 
 ## Spending Policy: Multisig (formerly CCC)
 
-We also support a mode where the COLDCARD is a multisig co-signer
+We also support a mode where the FRANKENCARD is a multisig co-signer
 and only performs its signature when a spending policy is met. The
 other multisig signers are free to sign or not sign as appropriate.
 
@@ -26,12 +26,12 @@ When a Spending Policy is in effect, there are limitations
 in effect:
 
 - Firmware updates are blocked.
-- There is no way to backup the COLDCARD.
+- There is no way to backup the FRANKENCARD.
 - Seed vault and Secure Notes are read-only (and can also be hidden).
 - Settings menu is inaccessible.
 - BIP-39 passphrases may be blocked (optional).
 
-We recommend getting the COLDCARD fully configured and setup
+We recommend getting the FRANKENCARD fully configured and setup
 for typical transactions before enabling the Spending Policy.
 
 # Setup Spending Policy
@@ -54,7 +54,7 @@ transactions are signed.
 ## Other Security Settings
 
 In addition to policy itself, there are a number of on/off
-switches which affect operation of the COLDCARD while the Spending
+switches which affect operation of the FRANKENCARD while the Spending
 Policy is in effect:
 
 ### Word Check
@@ -88,11 +88,11 @@ terse.
 ## Remove Policy
 
 This will remove your spending policy completely and remove
-the Bypass PIN. Your COLDCARD will be back to normal.
+the Bypass PIN. Your FRANKENCARD will be back to normal.
 
 ## Test Drive
 
-Experiment with how the COLDCARD will function if the Spending
+Experiment with how the FRANKENCARD will function if the Spending
 Policy was enabled. You can try to sign transactions that should
 be rejected and view the menus in the new mode without rebooting.
 
@@ -103,7 +103,7 @@ any special challenges.
 ## ACTIVATE
 
 This step will enable the Spending Policy and return to the
-main menu with it in effect. When you reboot the COLDCARD,
+main menu with it in effect. When you reboot the FRANKENCARD,
 the policy will still be in effect. You must use the
 Bypass PIN, followed by the normal main PIN, possibly
 followed by entering the first and last words of your seed
@@ -116,14 +116,14 @@ We recommend test-driving the feature before doing that.
 
 ## Money Manager Mode
 
-You could setup a Coldcard for another person, perhaps a family member,
+You could setup a Frankencard for another person, perhaps a family member,
 and enable web 2FA authentication. There does not need to be any
 other spending policy limits (velocity could be unlimited).
 
 Then enroll your own phone with the required 2FA values, and
 keep both that and the spending policy bypass PIN confidential.
 
-The holder the the Coldcard will need a 2FA code from your phone
+The holder the the Frankencard will need a 2FA code from your phone
 when they want to spend. They can call you for the 6-digit code
 from the 2FA app on your phone. This is not hard to provide over a
 voice call.
@@ -172,7 +172,7 @@ find the Bypass PIN listed.  You could delete or "hide" it. Hiding
 it is pointless since you cannot get to the trick PIN menu while
 the policy is in effect. Deleting the PIN however, is useful because
 it assures changes to spending policy are impossible. To recover
-the COLDCARD when this move is later regretted, under Advanced,
+the FRANKENCARD when this move is later regretted, under Advanced,
 there is "Destroy Seed" option which will clear the seed words and
 all settings, including the spending policy.
 
@@ -204,6 +204,6 @@ some confirmations, this erases the master seed, all settings, seed
 vault items, secure notes, and trick pins. It's basically a factory
 reset except for the main PIN code which is unchanged. Once you've
 done that, you can enter your seed words from backup (or restore a
-backup file) and continue to use the COLDCARD again.
+backup file) and continue to use the FRANKENCARD again.
 
 

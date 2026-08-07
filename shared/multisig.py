@@ -897,7 +897,7 @@ class MultisigWallet(WalletABC):
                 rv['x%d/' % (idx+1)] = dict(
                                 hw_type='coldcard', type='hardware',
                                 ckcc_xfp=xfp,
-                                label='Coldcard %s' % xfp2str(xfp),
+                                label='Frankencard %s' % xfp2str(xfp),
                                 derivation=deriv, xpub=xp)
 
             # sign export with first p2pkh key
@@ -908,7 +908,7 @@ class MultisigWallet(WalletABC):
 
     async def export_wallet_file(self, mode="exported from", descriptor=False,
                                  core=False, desc_pretty=True):
-        # create a text file with the details; ready for import to next Coldcard
+        # create a text file with the details; ready for import to next Frankencard
         my_xfp = settings.get('xfp')
         # both core and CC export contains newlines, not supported with simple QR
         force_bbqr = True
@@ -922,7 +922,7 @@ class MultisigWallet(WalletABC):
             name = "Descriptor"
             fname_pattern = self.make_fname('desc')
         else:
-            name = "Coldcard"
+            name = "Frankencard"
             fname_pattern = self.make_fname('export')
 
         hdr = '%s %s' % (mode, xfp2str(my_xfp))
@@ -959,7 +959,7 @@ class MultisigWallet(WalletABC):
                 print("%s\n" % desc, file=fp)
         else:
             if hdr_comment:
-                print("# Coldcard Multisig setup file (%s)\n#" % hdr_comment, file=fp)
+                print("# Frankencard Multisig setup file (%s)\n#" % hdr_comment, file=fp)
 
             print("Name: %s\nPolicy: %d of %d" % (self.name, self.M, self.N), file=fp)
 
@@ -1292,7 +1292,7 @@ async def disable_checks_menu(*a):
 With many different wallet vendors and implementors involved, it can \
 be hard to create a PSBT consistent with the many keys involved. \
 With this setting, you can \
-disable the more stringent verification checks your Coldcard normally provides.
+disable the more stringent verification checks your Frankencard normally provides.
 
 USE AT YOUR OWN RISK. These checks exist for good reason! Signed txn may \
 not be accepted by network.
@@ -1320,15 +1320,15 @@ async def trust_psbt_menu(*a):
     # show a story then go into chooser
 
     ch = await ux_show_story('''\
-This setting controls what the Coldcard does \
+This setting controls what the Frankencard does \
 with the co-signer public keys (XPUB) that may \
 be provided inside a PSBT file. Three choices:
 
 - Verify Only. Do not import the xpubs found, but do \
-verify the correct wallet already exists on the Coldcard.
+verify the correct wallet already exists on the Frankencard.
 
 - Offer Import. If it's a new multisig wallet, offer to import \
-the details and store them as a new wallet in the Coldcard.
+the details and store them as a new wallet in the Frankencard.
 
 - Trust PSBT. Use the wallet data in the PSBT as a temporary,
 multisig wallet, and do not import it. This permits some \
@@ -1336,7 +1336,7 @@ deniability and additional privacy.
 
 When the XPUB data is not provided in the PSBT, regardless of the above, \
 we require the appropriate multisig wallet to already exist \
-on the Coldcard. Default is to 'Offer' unless a multisig wallet already \
+on the Frankencard. Default is to 'Offer' unless a multisig wallet already \
 exists, otherwise 'Verify'.''')
 
     if ch == 'x': return
@@ -1405,7 +1405,7 @@ class MultisigMenu(MenuSystem):
                                  'msas', ['Partly Censor', 'Show Full'], story=(
                          'When enabled, full multisig addresses are shown without censorship.'
                          ' You MUST verify all addresses with your coordinator software,'
-                         ' BEFORE sending to them, because COLDCARD'
+                         ' BEFORE sending to them, because FRANKENCARD'
                          ' cannot know if other co-signers will accept the address.')))
         rv.append(NonDefaultMenuItem(
                          'Unsorted Multisig?' if version.has_qwerty else 'Unsorted Multi?',
@@ -1445,7 +1445,7 @@ async def make_ms_wallet_menu(menu, label, item):
     ]
     if ms.bip67:
         rv += [
-            MenuItem('Coldcard Export', f=ms_wallet_ckcc_export, arg=(ms, {})),
+            MenuItem('Frankencard Export', f=ms_wallet_ckcc_export, arg=(ms, {})),
             MenuItem('Electrum Wallet', f=ms_wallet_electrum_export, arg=ms),
         ]
     # only way to export non-BIP-67 ms wallet is descriptors (+core export)
@@ -1490,7 +1490,7 @@ async def ms_wallet_delete(menu, label, item):
     m.update_contents()
 
 async def ms_wallet_ckcc_export(menu, label, item):
-    # create a text file with the details; ready for import to next Coldcard
+    # create a text file with the details; ready for import to next Frankencard
     ms = item.arg[0]
     kwargs = item.arg[1]
     await ms.export_wallet_file(**kwargs)
@@ -1648,7 +1648,7 @@ async def ms_coordinator_qr(af_str, my_xfp, chain):
     num_files = 0
     xpubs = []
 
-    msg = 'Scan Exported XPUB from Coldcard'
+    msg = 'Scan Exported XPUB from Frankencard'
     while True:
         vals = await QRScannerInteraction().scan_general(msg, convertor, enter_quits=True)
         if vals is None:
@@ -1776,7 +1776,7 @@ async def ondevice_multisig_create(mode='p2wsh', addr_fmt=AF_P2WSH, is_qr=False,
         if is_qr:
             msg = "No XPUBs scanned. Exit."
         else:
-            msg = ("Unable to find any Coldcard exported keys on this card."
+            msg = ("Unable to find any Frankencard exported keys on this card."
                    " Must have filename: ccxp-....json")
         await ux_show_story(msg)
         return
@@ -1808,7 +1808,7 @@ async def ondevice_multisig_create(mode='p2wsh', addr_fmt=AF_P2WSH, is_qr=False,
 
     elif not num_mine:
         # add myself if not included already? As an option.
-        ch = await ux_show_story("Add current Coldcard with above XFP ?",
+        ch = await ux_show_story("Add current Frankencard with above XFP ?",
                                  title="[%s]" % xfp2str(my_xfp))
         if ch == "y":
             acct = await ux_enter_bip32_index('Account Number:')
@@ -1836,7 +1836,7 @@ async def ondevice_multisig_create(mode='p2wsh', addr_fmt=AF_P2WSH, is_qr=False,
     assert 1 <= M <= N <= MAX_SIGNERS
 
     if for_ccc:
-        name = "Coldcard Co-sign" if version.has_qwerty else "CCC"
+        name = "Frankencard Co-sign" if version.has_qwerty else "CCC"
         if ccc_ms_count:
             # make name unique for each CCC wallet, but they can edit
             name += " #%d" % (ccc_ms_count+1)
@@ -1879,7 +1879,7 @@ async def create_ms_step1(*a, for_ccc=None):
     else:
         ch = await ux_show_story('''\
 Insert SD card (or eject SD card to use Virtual Disk) with exported XPUB files \
-from at least one other Coldcard. A multisig wallet will be constructed using \
+from at least one other Frankencard. A multisig wallet will be constructed using \
 those keys and this device.
 
 Default is P2WSH addresses (segwit) or press (1) for P2SH-P2WSH.''', escape='1')

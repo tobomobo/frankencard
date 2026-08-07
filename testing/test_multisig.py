@@ -916,8 +916,8 @@ def test_export_single_ux(goto_home, comm_prefix, cap_story, pick_menu_item, cap
     item = [i for i in menu if name in i][0]
     pick_menu_item(item)
 
-    pick_menu_item('Coldcard Export')
-    contents = load_export(way or "sd", label="Coldcard multisig setup", is_json=False)
+    pick_menu_item('Frankencard Export')
+    contents = load_export(way or "sd", label="Frankencard multisig setup", is_json=False)
     if way == "qr":
         # QR code still displayed on screen
         press_select()
@@ -1713,7 +1713,7 @@ def test_make_airgapped(addr_fmt, acct_num, M_N, goto_home, cap_story, pick_menu
     if not incl_self:
         time.sleep(.1)
         title, story = cap_story()
-        assert "Add current Coldcard" in story
+        assert "Add current Frankencard" in story
         assert xfp2str(simulator_fixed_xfp) in title
         if incl_self is None:
             # add it here instead of having export xpubs JSON  beforehand
@@ -1737,8 +1737,8 @@ def test_make_airgapped(addr_fmt, acct_num, M_N, goto_home, cap_story, pick_menu
         # we use clear_ms fixture at the begining of each test
         # new multisig wallet is first menu item
         press_select()
-        pick_menu_item("Coldcard Export")
-        impf, fname = load_export("sd", label="Coldcard multisig setup", is_json=False,
+        pick_menu_item("Frankencard Export")
+        impf, fname = load_export("sd", label="Frankencard multisig setup", is_json=False,
                                   ret_fname=True)
         cc_fname = microsd_path(fname)
         assert f'Policy: {M} of {N}' in impf
@@ -2162,8 +2162,8 @@ def test_ms_import_many_derivs(M, N, way, make_multisig, clear_ms, offer_ms_impo
     pick_menu_item('Multisig Wallets')
     pick_menu_item(f'{M}/{N}: impmany')
 
-    pick_menu_item('Coldcard Export')
-    contents = load_export(way, label="Coldcard multisig setup", is_json=False)
+    pick_menu_item('Frankencard Export')
+    contents = load_export(way, label="Frankencard multisig setup", is_json=False)
     lines = io.StringIO(contents).readlines()
 
     for xfp,_,_ in keys:
@@ -2188,7 +2188,7 @@ def test_ms_import_many_derivs(M, N, way, make_multisig, clear_ms, offer_ms_impo
         kk = f'x{n}/'
         assert kk in el
         co = el[kk]
-        assert 'Coldcard' in co['label']
+        assert 'Frankencard' in co['label']
         dd = co['derivation']
         assert (dd in derivs) or (dd == actual) or ("42069h" in dd) or (dd == 'm')
 
@@ -4304,7 +4304,7 @@ def test_fwd_slash_in_name(import_ms_wallet, clear_ms, pick_menu_item, need_keyp
     pick_menu_item("Settings")
     pick_menu_item("Multisig Wallets")
     pick_menu_item(f"2/3: {name}")
-    pick_menu_item("Coldcard Export")
+    pick_menu_item("Frankencard Export")
     need_keypress("1")  # SD
     time.sleep(.1)
     title, story = cap_story()

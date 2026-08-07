@@ -123,7 +123,7 @@ def generate_public_contents():
         xfp = xfp2str(swab32(sv.node.my_fp()))
 
         yield ('''\
-# Coldcard Wallet Summary File
+# Frankencard Wallet Summary File
 ## For wallet with master key fingerprint: {xfp}
 
 Wallet operates on blockchain: {nb}
@@ -368,7 +368,7 @@ def generate_unchained_export(account_num=0):
     return ujson.dumps(rv), sign_der, AF_CLASSIC
 
 def generate_generic_export(account_num=0):
-    # Generate data that other programers will use to import Coldcard (single-signer)
+    # Generate data that other programers will use to import Frankencard (single-signer)
     from descriptor import Descriptor, multisig_descriptor_template
 
     chain = chains.current_chain()
@@ -448,7 +448,7 @@ def generate_electrum_wallet(addr_type, account_num):
 
     rv = OrderedDict(seed_version=17, use_encryption=False, wallet_type='standard')
 
-    lab = 'Coldcard Import %s' % xfp2str(xfp)
+    lab = 'Frankencard Import %s' % xfp2str(xfp)
     if account_num:
         lab += ' Acct#%d' % account_num
 

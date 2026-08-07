@@ -4,7 +4,7 @@ If the name of the multisig wallet related to an address is provided, address se
 can be greatly accelerated. Just provide `wallet=name` parameter in a standard
 [BIP-21](https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki) URL
 shown in QR code or NFC record. If omitted, search will continue across 
-all multisig wallets known by COLDCARD.
+all multisig wallets known by FRANKENCARD.
 
 ### Examples
 

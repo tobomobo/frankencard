@@ -582,11 +582,11 @@ def test_clone_start(reset_seed_words, pick_menu_item, cap_story, goto_home, src
     shutil.copy(f"{src_root_dir}/testing/data/{fname}", sd_dir)
     pick_menu_item("Advanced/Tools")
     pick_menu_item("Backup")
-    pick_menu_item("Clone Coldcard")
+    pick_menu_item("Clone Frankencard")
     time.sleep(1)
     title, story = cap_story()
     assert "Done" in story
-    assert "Take this MicroSD card back to other Coldcard" in story
+    assert "Take this MicroSD card back to other Frankencard" in story
     goto_home()
     assert len([i for i in os.listdir(sd_dir) if i.endswith(".7z")]) > num_7z
     os.remove(f"{sd_dir}/{fname}")
@@ -759,7 +759,7 @@ def test_refuse_backup(way, tmp, set_seed_words, backup_system, cap_story, unit_
             pick_menu_item("Advanced/Tools")
             pick_menu_item("Temporary Seed")
             need_keypress("4")
-            pick_menu_item("Coldcard Backup")
+            pick_menu_item("Frankencard Backup")
         else:
             pick_menu_item("Import Existing")
             pick_menu_item("Restore Backup")
@@ -828,7 +828,7 @@ def test_backup_long_name_display(fname, goto_home, pick_menu_item, need_keypres
     pick_menu_item('Advanced/Tools')
     pick_menu_item('Temporary Seed')
     need_keypress("4")
-    pick_menu_item('Coldcard Backup')
+    pick_menu_item('Frankencard Backup')
 
     time.sleep(.1)
     pick_menu_item(fname)

@@ -83,7 +83,7 @@ async def test_7z():
                 sr = str(result, 'ascii')
                 print("Backup contents:\n" + sr)
                 assert sr[0] == '#', result
-                assert 'Coldcard' in sr
+                assert 'Frankencard' in sr
                 assert len(set(sr)) < 100       # cleartext, english
                 assert ('chain = "%s"' % chain) in result
 

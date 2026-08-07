@@ -1,9 +1,9 @@
 
 # Firmware Upgrade and Recovery Process
 
-_This document applies to the Mk4, Mk5, and Q. Earlier COLDCARDs did not use this approach._
+_This document applies to the Mk4, Mk5, and Q. Earlier FRANKENCARDs did not use this approach._
 
-On the COLDCARD, we have done away with the slow external SPI flash
+On the FRANKENCARD, we have done away with the slow external SPI flash
 (serial flash) chip entirely (used in Mk1-Mk3). In it's place we
 use a much faster and huge 64 Mbit PSRAM chip (quad SPI RAM chip:
 ESP-PSRAM64H).
@@ -19,7 +19,7 @@ that can happen with power fails at just the wrong time.
 
 Steps:
 
-- firmware image (DFU file) is copied onto the COLDCARD, either by USB or SDCard
+- firmware image (DFU file) is copied onto the FRANKENCARD, either by USB or SDCard
 - the proposed firmware image (up to about 1.5Mbytes) is stored in PSRAM
 - the user approves the upgrade, and they must process the main PIN code to do that.
 - firmware image is checked for correct signature from factory (nothing proceeds if
@@ -65,7 +65,7 @@ might try this:
    to factory signed, but perhaps it has some feature they want to abuse or
    something.)
 
-3) Power up the COLDCARD, and it would try to restore the firmware image in PSRAM. 
+3) Power up the FRANKENCARD, and it would try to restore the firmware image in PSRAM. 
 
 Because of the world checksum, only the intended firmware can be
 restored, not any other version. There is no way to for the attacker
@@ -76,7 +76,7 @@ bits using UV-C.
 
 The most likely way to make the upgrade fail is a power failure
 during the 15-second period while the firmware is copied from PSRAM
-to main flash. The PSRAM will forget it's contents, and the COLDCARD
+to main flash. The PSRAM will forget it's contents, and the FRANKENCARD
 no longer has a complete copy of firmware anywhere.
 
 Most products would be a "brick" at this point, and the docs would

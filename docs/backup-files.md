@@ -1,20 +1,20 @@
 # Backup Feature
 
-The user can do a "full backup" of a Coldcard to external SD card.
+The user can do a "full backup" of a Frankencard to external SD card.
 Simply choose the option from the menu and
-the Coldcard will pick a strong password for you and display it.
+the Frankencard will pick a strong password for you and display it.
 
 The file we create is a [standard 7z archive](https://en.wikipedia.org/wiki/7z)
 with AES-256 encryption, in CBC mode. The 256-bit key is a SHA256 hash of a passphrase,
 hashed in a particular way to support 7z compatibility. We know
-the passphrase has at least 128-bits of entropy because the Coldcard
+the passphrase has at least 128-bits of entropy because the Frankencard
 uses its true random number generator (TRNG) to pick it.
 
 Once decrypted, which is possible using any 7z archive tool, the
 contents are a simple text file with everything you could need to
 access your funds, in an emergency, using another wallet system.
 
-Restoring the backup file onto a replacement Coldcard is a simple
+Restoring the backup file onto a replacement Frankencard is a simple
 process that merely requires entering the 12 words.
 
 ## Is it secure?
@@ -55,12 +55,12 @@ back-up ephemeral wallet instead of the main wallet.
   text file `word(number).txt` in the encrypted file without decrypting it.
 - The device PIN code is not preserved during backup.
 - We produce standards-compliant files, but do not support reading any
-  file except the ones produced by Coldcard.
-- Do not attempt to edit the file and restore it onto a Coldcard.
-- You cannot construct a file for the Coldcard to read because we implement only
+  file except the ones produced by Frankencard.
+- Do not attempt to edit the file and restore it onto a Frankencard.
+- You cannot construct a file for the Frankencard to read because we implement only
   enough to support reading files that we know that we've produced.
 - There is limited plausible deniability here: if you are forced to decrypt
-  the file, it is clearly a Coldcard backup file.
+  the file, it is clearly a Frankencard backup file.
 
 ## Example File
 
@@ -120,7 +120,7 @@ If you are playing along at home, the passphrase for the above file is:
     spice until comfort zoo divide album erode yard inmate change quantum skate
 
 You can grab the [example file here](backup.7z) and test it yourself, or use
-a real Coldcard to make your own.
+a real Frankencard to make your own.
 
 
 ## Internal Filenames
@@ -200,7 +200,7 @@ This process creates a file `ckcc-backup.txt` in the current directory.
 
 ```
 % cat ckcc-backup.txt
-# Coldcard backup file! DO NOT CHANGE.
+# Frankencard backup file! DO NOT CHANGE.
 
 # Private key details
 mnemonic = "index abuse oil swift wolf clarify broom auto student media ribbon blossom hundred brief tomato abandon copy design angle memory narrow urge bulk resemble"
@@ -218,6 +218,6 @@ setting.terms_ok = 1
 ```
 
 As you can see, it is a simple text file and if you needed to access your funds
-without the help of a Coldcard, it would be a simple matter to import either the `xprv`
+without the help of a Frankencard, it would be a simple matter to import either the `xprv`
 (BIP32 master) or the mnemonic (BIP39) into another wallet system.
 

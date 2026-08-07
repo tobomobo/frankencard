@@ -735,7 +735,7 @@ def test_verify_signature_file(way, addr_fmt, path, msg, sign_on_microsd, goto_h
 def test_verify_signature_file_header_warning(way, addr_sig, microsd_path, verify_armored_signature,
                                               cap_story):
     warning = "Specified address format does not match signature header byte format."
-    text = "Correctly signed, but not by this Coldcard"
+    text = "Correctly signed, but not by this Frankencard"
     fname = "warn-signed.sig"
     addr, sig = addr_sig
     tmplt = RFC_SIGNATURE_TEMPLATE.format(addr=addr, sig=sig, msg="aaaaaaaaaaaaaaaaaa")

@@ -1,8 +1,8 @@
-# Coldcard Memory Map
+# Frankencard Memory Map
 
 ## Background
 
-The microprocess on the Coldcard is from the STM32L4 family. It comes with
+The microprocess on the Frankencard is from the STM32L4 family. It comes with
 one or 2 megabytes of flash, and 128k to 512k of SRAM depending on Mk2/3/4.
 All types of memory share the same 32-bit address space.
 
@@ -26,8 +26,8 @@ directly from python programs.
 |---------------|-----------|--------------------------
 | 0x0800 0000   | 0x7800    | Mapped at zero briefly at boot time. Code. see `stm32/bootloader`
 | 0x0800 7800   | 0x0800    | Sensitive "pairing secret" flash page (2k)
-| 0x0800 8000   | 16k       | Interrupt handlers, file header (Micropython and Coldcard code)
-| 0x0800 c000   | 848k      | Main flash area for Micropython / Coldcard C code.
+| 0x0800 8000   | 16k       | Interrupt handlers, file header (Micropython and Frankencard code)
+| 0x0800 c000   | 848k      | Main flash area for Micropython / Frankencard C code.
 | 0x080e 0000   | 128k      | Internal FAT filesystem (the "patch" area, for custom python)
 | 0x1000 0000   | 0x6000    | SRAM2 area used by micropython code: disk caches, byte arrays, stack
 | 0x1000 6000   | 0x1c00    | SRAM2 area used by boot loader
@@ -41,8 +41,8 @@ directly from python programs.
 | 0x0800 0000   | 112k      | Bootloader code, including reset vector. See `stm32/mk4-bootloader`
 | 0x0801 c000   | 8k        | Sensitive "pairing secrets" for SE1 and SE2
 | 0x0801 e000   | 8k        | MCU keys, consumable; 256 32-bit write-once slots.
-| 0x0802 0000   | 16k       | Interrupt handlers, file header (Micropython and Coldcard code)
-| 0x0802 4000   | (~2m)     | Main flash area for Micropython / Coldcard C code.
+| 0x0802 0000   | 16k       | Interrupt handlers, file header (Micropython and Frankencard code)
+| 0x0802 4000   | (~2m)     | Main flash area for Micropython / Frankencard C code.
 | 0x0818 0000   | 512k      | Internal LFS filesystem (holds settings)
 | 0x2000 0000   | 640k      | SRAM1,2,3: used by micropython code: disk caches, byte arrays, stack
 | 0x2009 e000   | 8k        | Top of SRAM3 reserved for bootloader

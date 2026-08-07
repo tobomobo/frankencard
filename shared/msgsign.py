@@ -154,7 +154,7 @@ async def verify_armored_signed_msg(contents, digest_check=True):
 
     if sig_warn:
         # we know not ours only because wrong recid header used & not BIP-137 compliant
-        story = "Correctly signed, but not by this Coldcard. %s" % sig_warn
+        story = "Correctly signed, but not by this Frankencard. %s" % sig_warn
 
     await ux_show_story('\n\n'.join(m for m in [err_msg, story, warn_msg] if m), title=title)
 

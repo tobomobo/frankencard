@@ -13,7 +13,7 @@ from actions import file_picker
 from menu import MenuSystem, MenuItem
 
 background_msg = '''\
-Coldcard will pick a random private key (which has no relation to your seed words), \
+Frankencard will pick a random private key (which has no relation to your seed words), \
 and record the corresponding payment address and private key (WIF) into a text file, \
 creating a so-called "paper wallet".
 {can_qr}
@@ -24,7 +24,7 @@ CAUTION: Paper wallets carry MANY RISKS and should only be used for SMALL AMOUNT
 
 no_templates_msg = '''\
 You don't have any PDF templates to choose from, but plain text wallet files \
-can still be made. Visit the Coldcard website to get some interesting templates.\
+can still be made. Visit the Frankencard website to get some interesting templates.\
 '''
 
 SECP256K1_ORDER = b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xba\xae\xdc\xe6\xaf\x48\xa0\x3b\xbf\xd2\x5e\x8c\xd0\x36\x41\x41"
@@ -206,7 +206,7 @@ class PaperWalletMaker:
         # Generate the "simple" text file version, includes private key.
         from descriptor import append_checksum
 
-        fp.write('Coldcard Generated Paper Wallet\n\n')
+        fp.write('Frankencard Generated Paper Wallet\n\n')
 
         fp.write('Deposit address:\n\n  %s\n\n' % addr)
         fp.write('Private key (WIF=Wallet Import Format):\n\n  %s\n\n' % wif)

@@ -1,4 +1,4 @@
-# Coldcard Desktop Simulator
+# Frankencard Desktop Simulator
 
 ## One Time Setup
 
@@ -43,7 +43,7 @@ wallet (on testnet, always with the same seed). But there are other options:
 - `--seed "art art ... food"` => set the seed phrase to 24 words provided
 - `--metal` => use USB attached Coldcard for bootrom and SE features
 - `--metal --sflash` => copy SPI flash contents at boot time from real device (no writeback)
-- `--nick Name` => set the pre-login nickname for the Coldcard so it will be shown
+- `--nick Name` => set the pre-login nickname for the Frankencard so it will be shown
 - `--delay X` => set the "login countdown" value to X minutes, also force login
 - `--set key=val` => preset the setting 'key' to be 'val' 
 - `--msg` => jump to message signing from SD card menu item
@@ -131,7 +131,7 @@ ckcc -c /tmp/ckcc-simulator-35291.sock addr -s
 
 Simulator socket path is dumped to STDOUT after simulator is started:
 ```shell
-Coldcard Simulator: Commands (over simulated window):
+Frankencard Simulator: Commands (over simulated window):
   - Control-Q to quit
   - ^Z to snapshot screen.
   - ^S/^E to start/end movie recording

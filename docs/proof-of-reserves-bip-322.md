@@ -6,10 +6,10 @@ BIP-322 specification: <https://github.com/bitcoin/bips/blob/master/bip-0322.med
 
 ### PoR PSBT
 
-COLDCARD accepts a specially crafted PSBT file to sign as BIP-322 Proof of Reserves. The PSBT
+FRANKENCARD accepts a specially crafted PSBT file to sign as BIP-322 Proof of Reserves. The PSBT
 must meet all these requirements:
 
-* COLDCARD acts as a BIP-322 PSBT signer. It validates the BIP-322 `to_sign`
+* FRANKENCARD acts as a BIP-322 PSBT signer. It validates the BIP-322 `to_sign`
   transaction, shows the message from `PSBT_GLOBAL_GENERIC_SIGNED_MESSAGE`, and
   adds signatures to the PSBT. Finalizing and encoding the final BIP-322
   signature string is the responsibility of the finalizer.
@@ -22,7 +22,7 @@ must meet all these requirements:
 * PSBT (`to_sign`) MUST have at least one input.
 * First (0th) input of `to_sign` MUST spend the BIP-322 `to_spend` output.
 * Input 0 MUST include one of `PSBT_IN_NON_WITNESS_UTXO` or `PSBT_IN_WITNESS_UTXO`.
-* When input 0 provides `PSBT_IN_WITNESS_UTXO`, COLDCARD reconstructs the
+* When input 0 provides `PSBT_IN_WITNESS_UTXO`, FRANKENCARD reconstructs the
   expected `to_spend` txid from `PSBT_GLOBAL_GENERIC_SIGNED_MESSAGE` and the
   witness UTXO scriptPubKey.
 * When input 0 provides `PSBT_IN_NON_WITNESS_UTXO`, it MUST be the BIP-322
@@ -45,7 +45,7 @@ of these restrictions imposed by BIP-322.
 
 ### Output
 
-COLDCARD always returns a signed PSBT for BIP-322 message signing and Proof of
+FRANKENCARD always returns a signed PSBT for BIP-322 message signing and Proof of
 Reserves. It never returns an extracted/finalized transaction for these PSBTs.
 This is true even when finalization is requested over USB, such as with
 `ckcc unsigned.psbt --finalize`.
@@ -58,18 +58,18 @@ key or script, not the public key or script itself.
 
 ### Proof of Reserves Signing Experience
 
-After Coldcard recognizes a BIP-322 PSBT it reads the message from
+After Frankencard recognizes a BIP-322 PSBT it reads the message from
 `PSBT_GLOBAL_GENERIC_SIGNED_MESSAGE` and shows it to the user for approval.
-COLDCARD verifies that the message hash matches the input 0 `to_spend`
+FRANKENCARD verifies that the message hash matches the input 0 `to_spend`
 commitment before offering to sign.
 
-When the PSBT contains only input 0, COLDCARD labels the request as
+When the PSBT contains only input 0, FRANKENCARD labels the request as
 `BIP-322 Message`, because it is message signing and does not prove ownership
 of any additional reserve UTXOs. In that case it does not show transaction
-input/output counts. When the PSBT contains additional inputs, COLDCARD labels
+input/output counts. When the PSBT contains additional inputs, FRANKENCARD labels
 the request as `Proof of Reserves` and shows the reserve amount.
 
-If the message contains non-ASCII characters, COLDCARD warns that some
+If the message contains non-ASCII characters, FRANKENCARD warns that some
 characters may not be readable on screen.
 
 Legacy PoR PSBTs without `PSBT_GLOBAL_GENERIC_SIGNED_MESSAGE` are rejected by

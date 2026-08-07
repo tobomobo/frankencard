@@ -196,7 +196,7 @@ def setup_ccc(goto_ccc_menu, pick_menu_item, cap_story, press_select, pass_word_
             goto_ccc_menu()
             time.sleep(.1)
             title, story = cap_story()
-            assert title == ("Coldcard Co-Signing" if is_q1 else "CC Co-Sign")
+            assert title == ("Frankencard Co-Signing" if is_q1 else "CC Co-Sign")
             press_select()
 
             time.sleep(.1)
@@ -455,7 +455,7 @@ def ccc_ms_setup(microsd_path, virtdisk_path, scan_a_qr, is_q1, cap_menu, pick_m
         time.sleep(.1)
         title, story = cap_story()
         assert "one other device, as key B" in story
-        assert "You will need to export the XPUB from another Coldcard" in story
+        assert "You will need to export the XPUB from another Frankencard" in story
         press_select()
 
         time.sleep(.1)
@@ -528,7 +528,7 @@ def ccc_ms_setup(microsd_path, virtdisk_path, scan_a_qr, is_q1, cap_menu, pick_m
 
         assert f"Policy: 2 of {N}" in story
         if is_q1:
-            assert "Coldcard Co-sign" in story
+            assert "Frankencard Co-sign" in story
         else:
             assert "CCC" in story
         press_select()
@@ -945,8 +945,8 @@ def test_maxed_out(settings_set, setup_ccc, enter_enabled_ccc, ccc_ms_setup, sim
 
 
     pick_menu_item(target_mi)  # choose already created multisig
-    pick_menu_item("Coldcard Export")
-    ms_conf = load_export("sd", "Coldcard multisig setup", is_json=False)
+    pick_menu_item("Frankencard Export")
+    ms_conf = load_export("sd", "Frankencard multisig setup", is_json=False)
     press_cancel()
 
     # fund CCC multisig
@@ -1062,8 +1062,8 @@ def test_load_and_sign_key_C(settings_set, setup_ccc, enter_enabled_ccc, ccc_ms_
     bitcoind_wo = bitcoind_create_watch_only_wallet(target_mi)
 
     pick_menu_item(target_mi)  # choose already created multisig
-    pick_menu_item("Coldcard Export")
-    ms_conf = load_export("sd", "Coldcard multisig setup", is_json=False)
+    pick_menu_item("Frankencard Export")
+    ms_conf = load_export("sd", "Frankencard multisig setup", is_json=False)
     press_cancel()
 
     # fund CCC multisig
@@ -1241,8 +1241,8 @@ def test_multiple_multisig_wallets(settings_set, setup_ccc, enter_enabled_ccc, c
     w_mn, w_name = ami.rsplit(" ", 1)
     new_name = "new"
     pick_menu_item(ami)  # just another ms wallet
-    pick_menu_item("Coldcard Export")
-    ms_conf = load_export("sd", label="Coldcard multisig setup", is_json=False)
+    pick_menu_item("Frankencard Export")
+    ms_conf = load_export("sd", label="Frankencard multisig setup", is_json=False)
 
     # try importing duplicate does not work
     _, story = offer_ms_import(ms_conf)

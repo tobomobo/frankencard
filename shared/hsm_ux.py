@@ -57,7 +57,7 @@ class ApproveHSMPolicy(UserAuthorizedAction):
             if not self.refused and self.new_file:
                 confirm_char = '12346'[ngu.random.uniform(5)]
                 msg = '''Last chance. You are defining a new policy which \
-allows the Coldcard to sign specific transactions without any further user approval.\n\n\
+allows the Frankencard to sign specific transactions without any further user approval.\n\n\
 Policy hash:\n%s\n\n
 Press (%s) to save policy and enable HSM mode.''' % (self.policy.hash(), confirm_char)
 

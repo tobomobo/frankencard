@@ -19,8 +19,8 @@ The AES key includes the master secret and also a hash of the
 unique serial number of the card, retrieved using low-level 
 protocols. This prevents moving the file to another card.
 
-To allow the same card to unlock multiple Coldcards, we write the
-file using a filename derived from the serial number of the Coldcard
+To allow the same card to unlock multiple Frankencards, we write the
+file using a filename derived from the serial number of the Frankencard
 (hashed). Thus there could be a number of 2FA-enabling files on a
 single card.
 
@@ -29,7 +29,7 @@ tools may or may not hide it from you based on Unix filename
 conventions. Reformating the card will certainly remove this file,
 so keep that in mind when managing your "special" cards.
 
-If using COLDCARD Q and both card slot are populated during login
+If using FRANKENCARD Q and both card slot are populated during login
 make sure that enrolled card is in top slot (slot A).
 
 ## Menu Settings
@@ -77,7 +77,7 @@ there doesn't seem to be any need for Delta Mode.
 
 ## Duress Defenses
 
-We recommend simply keeping no card in your Coldcard once activating
+We recommend simply keeping no card in your Frankencard once activating
 this feature. Your attacker, or yourself under duress, will login
 normally and trigger this defense without you taking any explicit
 action.
@@ -89,10 +89,10 @@ special file. Either way would be an opportunity to ensure the
 automatic wipe occurs, even as you comply and provide the PIN code.
 
 Your enrolled SD cards can also be stored at another location away
-from your Coldcard. This could be a bank safety deposit box, since
+from your Frankencard. This could be a bank safety deposit box, since
 it contains no sensitive data.
 
-If you are closely surveilled when logging and using your Coldcard,
+If you are closely surveilled when logging and using your Frankencard,
 the PIN code might already be known to your attacker. However, there
 is no indication on the screen during a normal (successful) login
 that this feature is in effect, so they would not know if the SD

@@ -25,7 +25,7 @@ def make_psram_fs():
 COLDCARD Virtual Disk
 
 1) copy your PSBT file here.
-2) select from Coldcard menu & approve transaction.
+2) select from Frankencard menu & approve transaction.
 3) signed transaction file(s) will be saved here.
 
 '''.replace('\n', '\r\n'))

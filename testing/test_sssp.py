@@ -513,7 +513,7 @@ def test_remove_sssp(setup_sssp, pick_menu_item, press_select, cap_story, cap_me
     pick_menu_item("Test Drive")
     time.sleep(.1)
     _, story = cap_story()
-    assert "COLDCARD operation will look like with Spending Policy" in story
+    assert "FRANKENCARD operation will look like with Spending Policy" in story
     press_select()
 
     time.sleep(.1)
@@ -788,7 +788,7 @@ def test_ccc_with_sssp_block_h(setup_ccc, ccc_ms_setup, setup_sssp, bitcoind, po
     pick_menu_item("Test Drive")
     time.sleep(.1)
     _, story = cap_story()
-    assert "COLDCARD operation will look like with Spending Policy" in story
+    assert "FRANKENCARD operation will look like with Spending Policy" in story
     press_select()
 
     multi_addr = bitcoind_wo.getnewaddress()

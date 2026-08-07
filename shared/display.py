@@ -168,7 +168,7 @@ class Display:
         # display a splash screen with some version numbers
         self.clear()
         y = 4
-        self.text(None,    y, 'COLDCARD', font=FontLarge)
+        self.text(None,    y, 'FRANKENCARD', font=FontLarge)
         self.text(None, y+20, 'Wallet', font=FontLarge)
 
         from version import get_mpy_version
@@ -227,12 +227,20 @@ class Display:
         h = 14
         y += ry * h
 
+        # "Frankencard" is 3 chars longer than the name this fork replaced, so a few
+        # labels no longer fit at 128px. Drop to the tiny font rather than clip them.
+        font = FontSmall
+        ty = y
+        if x + self.width(msg, FontSmall) > Display.WIDTH:
+            font = FontTiny
+            ty = y + 4
+
         if is_sel:
             self.dis.fill_rect(0, y, Display.WIDTH, h-1, 1)
             self.icon(2, y, 'wedge', invert=1)
-            nx = self.text(x, y, msg, invert=1)
+            nx = self.text(x, ty, msg, font=font, invert=1)
         else:
-            nx = self.text(x, y, msg)
+            nx = self.text(x, ty, msg, font=font)
 
         # LATER: removed because caused confusion w/ underscore
         #if msg[0] == ' ' and space_indicators:

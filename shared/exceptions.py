@@ -12,7 +12,7 @@ class FramingError(RuntimeError):
 # never used
 #class CCUserRefused(RuntimeError): pass
 
-# Coldcard UX is busy with some other request
+# Frankencard UX is busy with some other request
 class CCBusyError(RuntimeError):
     pass
 

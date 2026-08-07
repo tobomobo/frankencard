@@ -110,9 +110,9 @@ def test_hacky_upgrade(mode, cap_story, transport, dev, sim_exec, make_firmware,
         if transport == 'usb':
             with pytest.raises(CCProtoError) as ee:
                 upload_file(data + hdr)
-            assert "doesn't support this version of Coldcard" in str(ee)
+            assert "doesn't support this version of Frankencard" in str(ee)
         else:
-            upgrade_by_sd(data, expect_fail="doesn't support this version of Coldcard")
+            upgrade_by_sd(data, expect_fail="doesn't support this version of Frankencard")
 
         return
 

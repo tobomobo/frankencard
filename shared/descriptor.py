@@ -367,7 +367,7 @@ class MultisigDescriptor(Descriptor):
     def pretty_serialize(self):
         """Serialize in pretty and human-readable format"""
         _type = "sortedmulti" if self.is_sorted else "multi"
-        res = "# Coldcard descriptor export\n"
+        res = "# Frankencard descriptor export\n"
         if self.is_sorted:
             res += "# order of keys in the descriptor does not matter, will be sorted before creating script (BIP-67)\n"
         else:

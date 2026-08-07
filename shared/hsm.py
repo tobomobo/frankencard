@@ -431,7 +431,7 @@ class AuditLogger:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_value:
-            self.fd.write('\n\n---- Coldcard Exception ----\n')
+            self.fd.write('\n\n---- Frankencard Exception ----\n')
             sys.print_exception(exc_value, self.fd)
 
         self.fd.write('\n===\n\n')

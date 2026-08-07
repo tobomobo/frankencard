@@ -1,24 +1,24 @@
-# Using Coldcard with Electrum
+# Using Frankencard with Electrum
 
 (please use the latest version of our plugin)
 
 ## Off-line signing (air gap)
 
 Setup Time:
-- setup your Electrum wallet associated with the seed of the Coldcard
+- setup your Electrum wallet associated with the seed of the Frankencard
 - can be done over USB as a connected device... ie. like normal
 - might be possible to do this completely offline
 
 To spend:
 - setup the details of the transaction (amount,destination)
-- press preview, or press send when the Coldcard not connected
+- press preview, or press send when the Frankencard not connected
 - you get a "transaction details" window, along bottom, new button is shown: "Save PSBT"
 - click that, and it saves a new file ... perhaps direct to SD card if you have it 
 - make note of the filename; it has date and time and wallet name in it.
-- close things, move the MicroSD to Coldcard
-- pick "Ready to Sign" from main menu on Coldcard
+- close things, move the MicroSD to Frankencard
+- pick "Ready to Sign" from main menu on Frankencard
 - select the correct transaction from list
-- observe and confirm details, press OK and the Coldcard signs it.
+- observe and confirm details, press OK and the Frankencard signs it.
 - a new file will be created on SD card: `blah-final.txn` .. contains HEX of txn to send
 - use any tool to transmit that on Bitcoin P2P network... for Electrum:
     - import the final transaction (`-final.txn`), using the "Tools > Load Transaction > from File" menu item
@@ -26,9 +26,9 @@ To spend:
     - should show up in wallet immediately
 
 
-## Restoring Coldcard Seed into Electrum
+## Restoring Frankencard Seed into Electrum
 
-Use this process to recover your funds if you loose your Coldcard and you still
+Use this process to recover your funds if you loose your Frankencard and you still
 have the seed words.
 
 
@@ -50,8 +50,8 @@ have the seed words.
 
 ### Import from Extended Public Key (XPUB)
 
-- You may also save the XPUB from the Coldcard and import that.
-- On the Coldcard, choose `Dump Summary` from the Advanced menu, and open the
+- You may also save the XPUB from the Frankencard and import that.
+- On the Frankencard, choose `Dump Summary` from the Advanced menu, and open the
         `public.txt` file that generated on your computer.
 - In `public.txt`, look for the section labeled "BIP44 / Electrum" and
     Copy the top `xpub` value, beside: `m/44'/0'`

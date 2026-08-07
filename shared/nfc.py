@@ -545,7 +545,7 @@ class NFCHandler:
                         continue
 
                 if urn == 'urn:nfc:ext:bitcoin.org:sha256' and len(msg) == 32:
-                    # probably produced by another Coldcard: SHA256 over expected contents
+                    # probably produced by another Frankencard: SHA256 over expected contents
                     psbt_sha = bytes(msg)
         except Exception: pass  # dont crash when given garbage
 

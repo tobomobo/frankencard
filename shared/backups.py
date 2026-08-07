@@ -91,7 +91,7 @@ def render_backup_contents(bypass_tmp=False):
     ADD('fw_date', date)
     ADD('fw_version', vers)
     ADD('fw_timestamp', timestamp)
-    COMMENT('Coldcard Hardware')
+    COMMENT('Frankencard Hardware')
     ADD('serial', version.serial_number())
     ADD('hardware', version.hw_label)
 
@@ -298,7 +298,7 @@ async def restore_tmp_from_dict_ll(vals, raw):
     from seed import set_ephemeral_seed
     from actions import goto_top_menu
 
-    await set_ephemeral_seed(raw, chain, origin="Coldcard Backup")
+    await set_ephemeral_seed(raw, chain, origin="Frankencard Backup")
     for k, v in vals.items():
         if not k[:8] == "setting.":
             continue
@@ -444,7 +444,7 @@ async def make_complete_backup(fname_pattern='backup.7z', write_sflash=False):
 
     if pwd and pwd != stored_pwd:
         ch = await ux_show_story("Would you like to use these same words next time you perform a backup?"
-                                 " Press (1) to save them into this Coldcard for next time.", escape='1')
+                                 " Press (1) to save them into this Frankencard for next time.", escape='1')
 
         if ch == '1':
             settings.set('bkpw', pwd)  # if on tmp save to tmp, do not update master
@@ -767,8 +767,8 @@ file with an ephemeral public key will be written.''' % OK)
         return
     
     # Wait for incoming clone file, allow retries
-    ch = await ux_show_story('''Keep power on this Coldcard, and take MicroSD card \
-to source Coldcard. Select Advanced/Tools > Backup > Clone Coldcard to write to card. Bring that card \
+    ch = await ux_show_story('''Keep power on this Frankencard, and take MicroSD card \
+to source Frankencard. Select Advanced/Tools > Backup > Clone Frankencard to write to card. Bring that card \
 back and press %s to complete clone process.''' % OK)
 
     while 1:
@@ -855,7 +855,7 @@ async def clone_write_data(*a):
 
     except (CardMissingError, OSError) as exc:
         # Standard msg shown if no SD card detected when we need one.
-        await ux_show_story("Start this process on the other Coldcard, which will write a file onto MicroSD card as the first step.\n\nInsert that card and try again here.")
+        await ux_show_story("Start this process on the other Frankencard, which will write a file onto MicroSD card as the first step.\n\nInsert that card and try again here.")
         return
 
     # pick our own temp keys for this encryption
@@ -867,6 +867,6 @@ async def clone_write_data(*a):
 
     await write_complete_backup(b2a_hex(session_key).decode(), fname, allow_copies=False, bypass_tmp=True)
 
-    await ux_show_story("Done.\n\nTake this MicroSD card back to other Coldcard and continue from there.")
+    await ux_show_story("Done.\n\nTake this MicroSD card back to other Frankencard and continue from there.")
 
 # EOF

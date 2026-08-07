@@ -41,7 +41,7 @@ Split Into {n} Parts
 
 On the following screen you will be shown {n} lists of words. \
 The new words, when reconstructed, will re-create the seed already \
-in use on this Coldcard.
+in use on this Frankencard.
 
 The new parts are generated deterministically from your seed, so if you \
 repeat this process later, the same words will be shown.
@@ -244,7 +244,7 @@ async def xor_restore_start(*a, force_tmp=False):
     # - or operational system
     ch = await ux_show_story('''\
 To import a seed split using XOR, you must import all the parts. \
-It does not matter the order (A/B/C or C/A/B) and the Coldcard \
+It does not matter the order (A/B/C or C/A/B) and the Frankencard \
 cannot determine when you have all the parts. You may stop at \
 any time and you will have a valid wallet. Combined seed parts \
 have to be equal length.\n
@@ -269,14 +269,14 @@ or press (2) for 18 words XOR.''' % OK, escape="12")
 
     escape = ""
     if not pa.is_secret_blank():
-        msg = ("Since you have a seed already on this Coldcard, the reconstructed XOR seed will be "
+        msg = ("Since you have a seed already on this Frankencard, the reconstructed XOR seed will be "
                "temporary and not saved. Wipe the seed first if you want to commit the new value "
                "into the secure element.")
 
         curr_num_words = settings.get('words', desired_num_words)
         if (curr_num_words == desired_num_words) and not pa.hobbled_mode:
             escape += "1"
-            msg += ("\n\nPress (1) to include this Coldcard's seed words into the XOR seed set, "
+            msg += ("\n\nPress (1) to include this Frankencard's seed words into the XOR seed set, "
                     "or %s to continue without." % OK)
 
         ch = await ux_show_story(msg, escape=escape)

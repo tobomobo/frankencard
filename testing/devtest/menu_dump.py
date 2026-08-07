@@ -31,7 +31,7 @@ async def doit():
             m = []
 
         # recursing into functions that do stuff doesn't work well, skip
-        avoid = {'Clone Coldcard', 'Debug Functions', 'Migrate Coldcard'}
+        avoid = {'Clone Frankencard', 'Debug Functions', 'Migrate Frankencard'}
         if any(label.startswith(a) for a in avoid):
             return
 

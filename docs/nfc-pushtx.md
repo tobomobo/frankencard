@@ -2,9 +2,9 @@
 
 This feature allows single-tap broadcast of the freshly-signed transaction.
 
-`PSBT ==[SD|QR|NFC]==> COLDCARD signed TXN ==[NFC tap]==> Phone Browser ==> Server TXN Broadcast`
+`PSBT ==[SD|QR|NFC]==> FRANKENCARD signed TXN ==[NFC tap]==> Phone Browser ==> Server TXN Broadcast`
 
-Once enabled with a URL, the COLDCARD will show the NFC animation
+Once enabled with a URL, the FRANKENCARD will show the NFC animation
 after signing the transaction. When the user taps their phone, the
 phone will see an NFC tag with URL inside. That URL contains the
 signed transaction ready to go, and once opening in the mobile
@@ -19,7 +19,7 @@ See the latest on our feature minisite: [PushTx.org](https://pushtx.org)
 
 ## Protocol Spec
 
-The COLDCARD needs a URL prefix. To that it appends some values:
+The FRANKENCARD needs a URL prefix. To that it appends some values:
 
 - `t=...` 
   - this is the transaction, in binary encoded with
@@ -29,7 +29,7 @@ The COLDCARD needs a URL prefix. To that it appends some values:
     - the rightmost 8 bytes of SHA256 over the transaction. Also `base64url` encoded.
 
 - `&n=XTN`
-    - if, and only if, the COLDCARD is set for Testnet, this value is appended to
+    - if, and only if, the FRANKENCARD is set for Testnet, this value is appended to
       indicate that the transaction is for Testnet3 and not MainNet.
     - when RegTest is enabled, the value will be `XRT`
 
@@ -37,7 +37,7 @@ We provide a few default URL values to our customers, including one backend we
 will operate on `coldcard.com`. The URL can also be directly entered by the
 customer. On the Q, it can be scanned from a QR code.
 
-For COLDCARD backend, the url used is:
+For FRANKENCARD backend, the url used is:
 
     https://coldcard.com/pushtx#
 
@@ -76,7 +76,7 @@ it is now waiting in the mempool.
 - A single-file (html and javascript) file is available
   at [coldcard.com/static/coldcard-pushtx.html](https://coldcard.com/static/coldcard-pushtx.html).
   You can host this file anywhere your phone can reach, and then use that URL in your
-  COLDCARD settings. It uses your phone's browser to submit directly
+  FRANKENCARD settings. It uses your phone's browser to submit directly
   to `mempool.space` and `blockstream.info` sites (both at same time). It is equivalent
   to the page hosted at `https://coldcard.com/pushtx#`. Full source code is published here:
   [github.com/Coldcard/push-tx](https://github.com/Coldcard/push-tx)
@@ -86,7 +86,7 @@ it is now waiting in the mempool.
 - Complete URL might be as large as 8,000 bytes. Some web servers will not support beyond
   4k bytes and the NFC implementation of the phone may also have limits.
 - The service URL provided must end in `?` or `#` or `&`.
-- `base64url` values from COLDCARD will not have padding (`=` bytes) at end.
+- `base64url` values from FRANKENCARD will not have padding (`=` bytes) at end.
 - POST cannot be used directly because the expect the phone to do a GET on the URL provided.
 - Honest backends will not log the IP address of incoming transactions, but there is
   no way to enforce that, and CloudFlare sees all.

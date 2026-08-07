@@ -20,7 +20,7 @@ def _set_nickname(device, is_Q, nickname):
     _pick_menu_item(device, is_Q, "Set Nickname")
     time.sleep(.1)
     _, story = _cap_story(device)
-    assert "give this Coldcard nickname and it will be shown before login"
+    assert "give this Frankencard nickname and it will be shown before login"
     _press_select(device, is_Q)
     # enter nick
     _enter_complex(device, is_Q, nickname, b39pass=False)
@@ -294,7 +294,7 @@ def test_terms_ok(request):
     _press_select(device, is_Q)
     time.sleep(.1)
     _, story = _cap_story(device)
-    assert "new Coldcard should have arrived SEALED in a bag" in story
+    assert "new Frankencard should have arrived SEALED in a bag" in story
     assert "look for any signs of tampering" in story
     assert "Take pictures and contact support@coinkite" in story
     _press_select(device, is_Q)
@@ -312,7 +312,7 @@ def test_terms_ok(request):
     time.sleep(.1)
     title, story = _cap_story(device)
     assert "WARNING" in title
-    assert "There is ABSOLUTELY NO WAY to 'reset the PIN' or 'factory reset' the Coldcard" in story
+    assert "There is ABSOLUTELY NO WAY to 'reset the PIN' or 'factory reset' the Frankencard" in story
     assert "Press (6)" in story
     _need_keypress(device, "6")
     time.sleep(.2)
@@ -375,13 +375,13 @@ def test_wrong_pin_input(request, brick):
         time.sleep(.1)
         title, story = _cap_story(device)
         assert title == "I Am Brick!"
-        assert "After 13 failed PIN attempts this Coldcard is locked forever" in story
+        assert "After 13 failed PIN attempts this Frankencard is locked forever" in story
         assert "no way to reset or recover the secure element" in story
         assert "forever inaccessible" in story
         if is_Q:
             assert "Calculator mode starts now." in story
         else:
-            assert "Restore your seed words onto a new Coldcard" in story
+            assert "Restore your seed words onto a new Frankencard" in story
     else:
         _login(device, is_Q, "22-22", num_failed=12)
         time.sleep(.5)

@@ -2,7 +2,7 @@
 #
 # (c) Copyright 2018 by Coinkite Inc. This file is covered by license found in COPYING-CC.
 #
-# Simulate the hardware of a Coldcard. Particularly the OLED display (128x32) and 
+# Simulate the hardware of a Frankencard. Particularly the OLED display (128x32) and 
 # the number pad.
 #
 # Can be run in headless mode (--headless) mostly useful for unit tests
@@ -803,9 +803,9 @@ def start():
         want_xterm = True
 
     if is_headless:
-        print("\nColdcard Simulator (headless). Output below is from the simulated system:\n\n")
+        print("\nFrankencard Simulator (headless). Output below is from the simulated system:\n\n")
     else:
-        print('''\nColdcard Simulator: Commands (over simulated window):
+        print('''\nFrankencard Simulator: Commands (over simulated window):
   - Control-Q to quit
   - ^Z to snapshot screen.
   - ^S/^E to start/end movie recording
@@ -838,7 +838,7 @@ Q1 specials:
             
         bg = factory.from_image(simdis.background_img)
 
-        window = sdl2.ext.Window("Coldcard Simulator", size=bg.size, position=(100, 100))
+        window = sdl2.ext.Window("Frankencard Simulator", size=bg.size, position=(100, 100))
         window.show()
 
         ico = factory.from_image('program-icon.png')
@@ -981,7 +981,7 @@ Q1 specials:
 
     xterm_args = [
         'xterm',
-        '-title', 'Coldcard Simulator REPL',
+        '-title', 'Frankencard Simulator REPL',
         '-geom', '132x40+650+40',
         # Route selections to CLIPBOARD so pasting in other apps (Ctrl+V) works.
         '-xrm', 'XTerm*selectToClipboard: true',

@@ -1,8 +1,8 @@
-# COLDCARD Message Signing 
+# FRANKENCARD Message Signing 
 
-COLDCARD can sign messages send to it via USB with the help of `ckcc` utility, 
+FRANKENCARD can sign messages send to it via USB with the help of `ckcc` utility, 
 sign messages provided via specially crafted file on SD card or Vdisk, 
-and NFC-equipped models (Mk4, Mk5, and Q) can also sign messages sent to COLDCARD via NFC.
+and NFC-equipped models (Mk4, Mk5, and Q) can also sign messages sent to FRANKENCARD via NFC.
 The resulting signature can be returned over SD card/Vdisk, NFC, or — on Q — as a QR code.
 
 Signature format follows [BIP-0137](https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki) specification.
@@ -13,11 +13,11 @@ From version `5.1.0` correct header byte is used for corresponding script type.
 
 From version `5.1.0` users can verify signed messages directly on the device.
 If signature file is on SD card or Virtual disk `Advanced/Tools -> File Management -> Verify Sig File`. In case
-signature file is detached signature of signed export (or any other file), COLDCARD can check if digest of file 
+signature file is detached signature of signed export (or any other file), FRANKENCARD can check if digest of file 
 specified in the message matches contents of file. This requires file signed to be  available on SD card or Vdisk.
 File size limit for signature files is approximately 10KB.
 If signature file is imported via NFC `Advance/Tools -> NFC Tools -> Verify Sig File`.
-To cross-verify COLDCARD verification use https://www.verifybitcoinmessage.com/ as it supports multiple script types.
+To cross-verify FRANKENCARD verification use https://www.verifybitcoinmessage.com/ as it supports multiple script types.
 Bitcoin core can only verify P2PKH.
 
 ## Signed Exports

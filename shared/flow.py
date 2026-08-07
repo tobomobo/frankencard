@@ -138,13 +138,13 @@ HWTogglesMenu = [
 Blocks any data over USB port. Useful when your plan is air-gap usage.'''),
     ToggleMenuItem('Virtual Disk', 'vidsk', ['Default Off', 'Enable', 'Enable & Auto'],
         on_change=change_virtdisk_enable,
-        story='''Coldcard can emulate a virtual disk drive (4MB) where new PSBT files \
+        story='''Frankencard can emulate a virtual disk drive (4MB) where new PSBT files \
 can be saved. Signed PSBT files (transactions) will also be saved here. \n\
 In "auto" mode, selects PSBT as soon as written.'''),
     ToggleMenuItem('NFC Sharing', 'nfc', ['Default Off', 'Enable NFC'], on_change=change_nfc_enable,
         story='''\
 NFC (Near Field Communications) allows a phone to "tap" to send and receive data \
-with the Coldcard.''',
+with the Frankencard.''',
         predicate=version.has_nfc),
 ]
 
@@ -261,7 +261,7 @@ FileMgmtMenu = [
     MenuItem('NFC File Share', predicate=nfc_enabled, f=nfc_share_file, shortcut=KEY_NFC),
     MenuItem('BBQr File Share', predicate=version.has_qr, f=qr_share_file, arg=True),
     MenuItem('QR File Share', predicate=version.has_qr, f=qr_share_file, shortcut=KEY_QR),
-    MenuItem('Clone Coldcard', predicate=has_secrets, f=clone_write_data),
+    MenuItem('Clone Frankencard', predicate=has_secrets, f=clone_write_data),
     MenuItem('Format SD Card', f=wipe_sd_card),
     MenuItem('Format RAM Disk', predicate=vdisk_enabled, f=wipe_vdisk),
 ]
@@ -383,7 +383,7 @@ BackupStuffMenu = [
     MenuItem("Backup System", f=backup_everything),
     MenuItem("Verify Backup", f=verify_backup),
     MenuItem("Restore Backup", f=need_clear_seed),   # just a UX msg really
-    MenuItem('Clone Coldcard', predicate=has_secrets, f=clone_write_data),
+    MenuItem('Clone Frankencard', predicate=has_secrets, f=clone_write_data),
 ]
 
 NFCToolsMenu = [
@@ -446,7 +446,7 @@ ImportWallet = [
     MenuItem('Scan QR Code', predicate=version.has_qr,
              shortcut=KEY_QR, f=scan_any_qr, arg=(True, False)),
     MenuItem("Restore Backup", f=restore_backup, arg=False),  # tmp=False
-    MenuItem("Clone Coldcard", menu=clone_start),
+    MenuItem("Clone Frankencard", menu=clone_start),
     MenuItem("Import XPRV", f=import_xprv, arg=False),  # ephemeral=False
     MenuItem("Tapsigner Backup", f=import_tapsigner_backup_file, arg=False),
     MenuItem("Seed XOR", f=xor_restore_start),
@@ -468,7 +468,7 @@ EmptyWallet = [
     #         xxxxxxxxxxxxxxxx
     MenuItem('New Seed Words', menu=NewSeedMenu),
     MenuItem('Import Existing', menu=ImportWallet),
-    MenuItem("Migrate Coldcard", menu=clone_start),
+    MenuItem("Migrate Frankencard", menu=clone_start),
     MenuItem("Key Teleport (start)", f=kt_start_rx, predicate=version.has_qr),
     MenuItem('Help', f=virgin_help, predicate=not version.has_qwerty),
     MenuItem('Advanced/Tools', menu=AdvancedPinnedVirginMenu, shortcut='t'),

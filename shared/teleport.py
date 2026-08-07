@@ -83,7 +83,7 @@ We will re-use same values as last try, unless you press (R) for new values to b
 
     short_code, payload = generate_rx_code(kp)
 
-    msg = '''To receive sensitive data from another COLDCARD, \
+    msg = '''To receive sensitive data from another FRANKENCARD, \
 share this Receiver Password with sender:
 
    %s  =  %s
@@ -545,7 +545,7 @@ class SecretPickerMenu(MenuSystem):
 
         if msg:
             m.append( MenuItem(msg, f=self.share_master_secret) )
-            m.append( MenuItem("Full COLDCARD Backup", f=self.share_full_backup) )
+            m.append( MenuItem("Full FRANKENCARD Backup", f=self.share_full_backup) )
         
         super().__init__(m)
 
@@ -593,7 +593,7 @@ class SecretPickerMenu(MenuSystem):
         ch = await ux_show_story("Sending complete backup, including master secret, "
             "seed vault (if any), multisig wallets, notes/passwords, and all settings! "
             "The receiving "
-            "COLDCARD must already have the master seed wiped to be able to install "
+            "FRANKENCARD must already have the master seed wiped to be able to install "
             "everything, otherwise only master secret and multisig are saved into a tmp seed. "
             "OK to proceed?")
         if ch != 'y': return

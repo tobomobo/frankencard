@@ -1,6 +1,6 @@
 # Export wallet file format (Generic JSON)
 
-Coldcard can export data intended for various desktop and mobile
+Frankencard can export data intended for various desktop and mobile
 wallet systems, but we also have a file format for general purpose
 exports, which we hope future wallet makers will leverage.
 

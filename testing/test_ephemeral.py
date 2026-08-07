@@ -1429,7 +1429,7 @@ def test_temporary_from_backup(multisig, backup_system, import_ms_wallet, get_se
     seed_vault_enable(seedvault)
 
     goto_eph_seed_menu()
-    pick_menu_item("Coldcard Backup")
+    pick_menu_item("Frankencard Backup")
 
     time.sleep(.1)
     pick_menu_item(fname)

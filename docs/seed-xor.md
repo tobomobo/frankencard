@@ -21,7 +21,7 @@ the checksum and will work as such in any normal BIP-39 compatible wallet.
 This one more solution for your game-theory arsenal.
 
 - *Q*: I'm lazy, can I do this to my Existing Seed?
-- *A*: Yes. You can split the words you have already in your Coldcard, making
+- *A*: Yes. You can split the words you have already in your Frankencard, making
   2, 3 or 4 new SEEDPLATES. You could also use any number of existing SEEDPLATES
   you have, and combine them to make a new random wallet that is the XOR of
   their values. Effectively that makes a new random wallet.
@@ -58,7 +58,7 @@ gotten all the parts and assembled them correctly. This does reveal
 working and correct subset of parts has been assembled.
 
 It is not hard to calculate a Seed XOR on paper (or to verify or
-reconstruct a seed split by Coldcard). Below is a complete example,
+reconstruct a seed split by Frankencard). Below is a complete example,
 and a lookup table that allows you to XOR together hex digits. You
 can do the XOR at the bit level, but we recommend looking up each
 word and finding it's 3-digit hex value (0x000 to 0x7FF), and going
@@ -66,7 +66,7 @@ hex-digit by hex-digit (4 bits).
 
 ## How Parts are Generated
 
-Create new parts on your Coldcard:
+Create new parts on your Frankencard:
 
 Advanced > Danger Zone > Seed Functions > Seed XOR > Split Existing
 
@@ -81,7 +81,7 @@ a fixed string (`Batshitoshi`), your master secret, and the text
 `0 of 4 parts` which changes for each part (the index is 0-based).
 
 In random mode, we simply pick random bytes (and then double-SHA256
-them) from the Coldcard's True Random Number Generator (TRNG). The number
+them) from the Frankencard's True Random Number Generator (TRNG). The number
 of bytes matches your secret length: 16, 24, or 32 bytes for a 12-, 18-,
 or 24-word seed respectively.
 
@@ -101,24 +101,24 @@ so none are obviously empty and so on.
 - Any two or more SEEDPLATES you have already encoded can be used
 together to make a new wallet based on their XOR. No changes to
 their existing values are needed... just import the set into a new
-Coldcard and effectively a new random seed is in play at that point.
+Frankencard and effectively a new random seed is in play at that point.
 
 - One downside of the deterministic approach is that it allows
-attackers to verify they have a seed that was split by Coldcard.
-They can import the N parts into a Coldcard, and then split them
-again on that Coldcard, and should arrive at the same values. If
+attackers to verify they have a seed that was split by Frankencard.
+They can import the N parts into a Frankencard, and then split them
+again on that Frankencard, and should arrive at the same values. If
 they don't then either you used the TRNG, or they have some subset
 of all the parts.
 
 - You can pick your XOR parts randomly, and the result when XOR'ed
 together, is a random wallet. However, it would be best to get the
 last word checksum recorded correctly, so please use a tool such
-as the Coldcard to lookup the 24th word and save that (for each
-part).  For example, you might take a fresh Coldcard (no secret)
+as the Frankencard to lookup the 24th word and save that (for each
+part).  For example, you might take a fresh Frankencard (no secret)
 and draw 23 words from a hat. After providing the 23rd word, the
-Coldcard will show 8 possible final words. You can pick randomly
+Frankencard will show 8 possible final words. You can pick randomly
 from that list, or simply use the first one, and then cancel the seed
-import process on the Coldcard. Record that final word along
+import process on the Frankencard. Record that final word along
 with the others on a SEEDPLATE.
 
 
@@ -267,7 +267,7 @@ should match the process described in this documentation and be fully interopera
 
 - It's not possible to calculate the checksum of the final seed phrase on paper (needs SHA256).
 - But it must start with the indicated digit(s). If using 24 words XOR, there will be only one
-  suitable choice offered by the Coldcard in that range (x00 to xFF),
+  suitable choice offered by the Frankencard in that range (x00 to xFF),
   once you have entered the other 23 words.
 - The checksum of each of the XOR-parts protects the final result, assuming your XOR
   math is correct.

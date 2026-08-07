@@ -23,7 +23,7 @@ class FirstTimeUX:
             settings.remove_key("nfc")
 
             await ux_show_story('''\
-Your COLDCARD has been configured for \
+Your FRANKENCARD has been configured for \
 best security practices: 
 
 - USB disabled

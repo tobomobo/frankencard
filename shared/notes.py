@@ -35,7 +35,7 @@ async def make_notes_menu(*a):
     if not settings.get('secnap', False):
         # Explain feature, and then enable if interested. Drop them into menu.
         ch = await ux_show_story('''\
-Enable this feature to store short text notes and passwords inside the Coldcard.
+Enable this feature to store short text notes and passwords inside the Frankencard.
 
 The notes are encrypted along with your other settings and will be backed-up with them.
 
@@ -829,7 +829,7 @@ async def start_export(notes):
 
 
 async def import_from_other(menu, *a):
-    # Suck in a bunch of notes/passwords. Has to be coming from a Coldcard
+    # Suck in a bunch of notes/passwords. Has to be coming from a Frankencard
     # - but it's also just simple JSON
     from actions import file_picker
     from backups import bkpw_min_len, check_and_decrypt
@@ -842,7 +842,7 @@ async def import_from_other(menu, *a):
     elif choice == KEY_QR:
         # Always do BBRq.
         qr = QRScannerInteraction()
-        records = await qr.scan_json('Scan BBQr from other COLDCARD.')
+        records = await qr.scan_json('Scan BBQr from other FRANKENCARD.')
         if records is None: return
         ok = await import_from_json(records)
         if not ok: return

@@ -327,7 +327,7 @@ def test_h_tempseeds(mode, set_hobble, pick_menu_item, cap_menu, settings_set, i
         with open_microsd('example.7z', 'wb') as fd:
             fd.write(contents)
 
-        pick_menu_item("Coldcard Backup")
+        pick_menu_item("Frankencard Backup")
         time.sleep(0.1)
         need_keypress('1')
         time.sleep(0.1)
@@ -484,7 +484,7 @@ def test_h_seedxor(set_hobble, need_keypress, press_cancel, cap_screen,
 
     title, story = cap_story()
     assert 'Since you have' in story
-    assert "include this Coldcard's seed" not in story      # WEAK: fragile if UX changes
+    assert "include this Frankencard's seed" not in story      # WEAK: fragile if UX changes
 
     press_cancel()
 

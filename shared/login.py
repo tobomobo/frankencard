@@ -179,14 +179,14 @@ class LoginUX:
                 pass
 
     async def we_are_ewaste(self, num_fails):
-        msg = '''After %d failed PIN attempts this Coldcard is locked forever. \
+        msg = '''After %d failed PIN attempts this Frankencard is locked forever. \
 By design, there is no way to reset or recover the secure element, and its contents \
 are now forever inaccessible.\n\n''' % num_fails
 
         if has_qwerty:
             msg += 'Calculator mode starts now.'
         else:
-            msg += 'Restore your seed words onto a new Coldcard.'
+            msg += 'Restore your seed words onto a new Frankencard.'
 
         while 1:
             ch = await ux_show_story(msg, title='I Am Brick!', escape='6')
@@ -199,7 +199,7 @@ are now forever inaccessible.\n\n''' % num_fails
 
     async def confirm_attempt(self, attempts_left, value):
 
-        ch = await ux_show_story('''You have %d attempts left before this Coldcard BRICKS \
+        ch = await ux_show_story('''You have %d attempts left before this Frankencard BRICKS \
 ITSELF FOREVER.
 
 Check and double-check your entry:\n\n  %s\n

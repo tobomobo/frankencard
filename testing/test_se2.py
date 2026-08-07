@@ -372,7 +372,7 @@ def test_ux_add_simple(new_pin, op_mode, expect, but_dont, xflags,
 @pytest.mark.parametrize('num_wrong', [0, 1, 3, 9, 99])
 @pytest.mark.parametrize('op_mode, expect, xflags', [
     ('Wipe, Stop', 'Seed is wiped and a message', TC_WIPE), 
-    ('Wipe & Reboot', 'Seed is wiped and Coldcard reboots', TC_WIPE|TC_BLANK_WALLET), 
+    ('Wipe & Reboot', 'Seed is wiped and Frankencard reboots', TC_WIPE|TC_BLANK_WALLET), 
     ('Silent Wipe', 'Seed is silently wiped', TC_WIPE|TC_FAKE_OUT), 
     ('Brick Self', 'Become a brick instantly', TC_BRICK),
     ('Last Chance', 'Wipe seed, then give one more try', TC_WIPE|TC_BRICK),
@@ -435,7 +435,7 @@ def test_ux_wrong_pin(num_wrong, op_mode, expect, xflags, enter_number,
 
 
 @pytest.mark.parametrize('subchoice, expect, xflags', [
-    ( 'Wipe & Reboot', 'wiped and Coldcard reboots', TC_WIPE|TC_REBOOT ),
+    ( 'Wipe & Reboot', 'wiped and Frankencard reboots', TC_WIPE|TC_REBOOT ),
     ( 'Silent Wipe', 'code was just wrong', TC_WIPE|TC_FAKE_OUT ),
     ( 'Say Wiped, Stop', 'message is shown', TC_WIPE ),
 ])

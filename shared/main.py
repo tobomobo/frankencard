@@ -30,7 +30,7 @@ except:
 # Sometimes useful: die early for debug
 #raise SystemExit
 
-print("---\nColdcard Wallet from Coinkite Inc. (c) 2018-2024.")
+print("---\nFRANKENCARD: unofficial fork of Coldcard Wallet, (c) 2018-2024 Coinkite Inc.")
 
 import version
 datestamp,vers,_ = version.get_mpy_version()
