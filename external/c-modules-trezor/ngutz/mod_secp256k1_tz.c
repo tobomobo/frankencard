@@ -79,6 +79,13 @@ STATIC void parse_pub65(const uint8_t *p, size_t len, uint8_t out65[65]) {
 
 // DIVERGENCE: there is no context object in the pure-C backend, so there is
 // nothing to re-randomize. Kept as a no-op because shared/psbt.py calls it.
+//
+// This is not a dropped countermeasure. libsecp256k1's context randomization
+// blinds once per *session* -- psbt.py calls this above the input loop, not
+// inside it -- whereas tc_ecdsa_sign_digest_ex() blinds every signature: it
+// draws a fresh `randk` and masks the modular inversion of k. On a 20-input
+// PSBT that is 20 blindings instead of 1. Do not "restore" this by wiring in a
+// context; there is nothing here that is weaker.
 STATIC mp_obj_t s_ctx_rnd(void) {
     return mp_const_none;
 }
