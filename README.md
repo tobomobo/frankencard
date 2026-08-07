@@ -60,7 +60,7 @@ make diff      # runs the same expression on both backends, demands equality
 | `test_wif` / `test_addr` / `test_msg` | identical pass/fail sets |
 | MK4 + Q firmware | build, `rng-code-check` passes |
 
-Three differences are intentional, all where libngu is worse: `bytes(-1)`
+Four differences are intentional: `bytes(-1)`
 SIGBUSes there and raises `ValueError` here; `b32_decode` silently **truncates**
 at an embedded NUL there and is rejected here (it decodes TOTP secrets, so
 shortening one quietly is worse than refusing it); and `reseed()` is a no-op

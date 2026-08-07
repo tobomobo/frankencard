@@ -379,6 +379,20 @@ STATIC mp_obj_t s_hdnode_derive(mp_obj_t self_in, mp_obj_t next_child_in,
 
     uint32_t next_child = mp_obj_get_int_truncated(next_child_in);
     bool hard = mp_obj_is_true(hard_in);
+
+    // DIVERGENCE (deliberate, stricter than both backends): an index that
+    // already carries bit 31 while hard=False is ambiguous, and the two
+    // libraries resolve it DIFFERENTLY -- producing different private keys for
+    // the same call. trezor's hdnode_private_ckd() decides hardened-ness from
+    // the index bit, so it does a hardened derivation; libngu obeys its own
+    // flag and does a non-hardened derivation with a hardened index. Rather
+    // than silently pick one interpretation of a caller's contradictory
+    // request, refuse it. No firmware caller passes such an index -- every
+    // derive() site is bounded or asserted -- so this rejects nothing real.
+    if(!hard && (next_child & 0x80000000)) {
+        mp_raise_ValueError(MP_ERROR_TEXT("index has hardened bit but hard=False"));
+    }
+
     if(hard) next_child |= 0x80000000;
 
     if(hard && !self->have_private) {

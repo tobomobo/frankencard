@@ -59,6 +59,9 @@ CASES = [
     # blanked node must not be usable
     '(lambda n: (n.blank(), n.privkey()))'
     '(ngu.hdnode.HDNode().from_master(b"\\x00"*32))',
+    # ambiguous index: bit 31 set but hard=False. The two backends resolve this
+    # to DIFFERENT private keys, so this backend refuses it outright.
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).derive(0x80000000, False)',
     # hardened derive on a public-only node
     '(lambda n: n.derive(0, True))(ngu.hdnode.HDNode().from_chaincode_pubkey('
     'b"\\x00"*32, ngu.secp256k1.keypair(b"\\x01"*32).pubkey().to_bytes()))',
@@ -95,6 +98,9 @@ EXPECTED_DIVERGENCES = {
         "libngu silently truncates at an embedded NUL",
     'b32_decode("A\\x00B")':
         "libngu silently truncates at an embedded NUL",
+    # See the DIVERGENCE comment in mod_hdnode_tz.c s_hdnode_derive().
+    'derive(0x80000000, False)':
+        "ambiguous hardened bit: backends produce DIFFERENT keys; we refuse",
 }
 
 

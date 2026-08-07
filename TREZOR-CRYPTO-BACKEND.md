@@ -108,9 +108,9 @@ python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
 differential tests compare against, and it is what makes the byte-identical
 claim checkable rather than asserted.
 
-### Three intentional differences
+### Four intentional differences
 
-All are cases where libngu is worse, found by differential testing:
+Found by differential testing and review:
 
 1. **`ngu.random.bytes(-1)` hard-crashes libngu** (SIGBUS, exit 138) with no
    exception. Here it raises `ValueError`. This is a live bug in shipping
@@ -121,7 +121,14 @@ All are cases where libngu is worse, found by differential testing:
    (`users.py`, reachable over USB) and QR payloads (`bbqr.py`), where silently
    shortening secret material is worse than refusing it. Found by
    `fuzz_codecs.py`, not by hand-picked vectors.
-3. **`ngu.random.reseed()` is a no-op.** In libngu it *replaced* the PRNG state.
+3. **`HDNode.derive(idx, False)` refuses an index that already carries bit 31.**
+   The two libraries resolve that contradiction *differently* and produce
+   **different private keys** for the same call: trezor decides hardened-ness
+   from the index bit, libngu obeys its own flag. Rather than silently pick an
+   interpretation, this backend rejects it. No firmware caller passes such an
+   index, so nothing real is refused. This is the only case found where the two
+   backends disagreed on key material.
+4. **`ngu.random.reseed()` is a no-op.** In libngu it *replaced* the PRNG state.
    With a kernel CSPRNG / hardware TRNG there is no state a 32-bit value can
    improve, so it does nothing. `shared/mk4.py` still calls it.
 
