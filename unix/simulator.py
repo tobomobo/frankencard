@@ -912,7 +912,28 @@ Q1 specials:
     # unix
     cwd = os.getcwd()
     # abs paths
-    cc_mpy = os.path.join(cwd, "coldcard-mpy")
+    # FORK: which interpreter runs is a correctness question, not a detail --
+    # coldcard-mpy is libngu-backed and coldcard-mpy-tz is trezor-backed, and a
+    # test result means nothing unless you know which one produced it. Say so
+    # out loud, and let the caller pick without needing a parallel work dir.
+    cc_mpy = os.path.join(cwd, os.environ.get('COLDCARD_MPY') or 'coldcard-mpy')
+    if not os.path.isfile(cc_mpy) or not os.access(cc_mpy, os.X_OK):
+        print("ERROR: no interpreter at %s (build it first)" % cc_mpy)
+        sys.exit(1)
+    # flush: stdout is block-buffered when redirected to a log, and `make
+    # sim-start` greps this line to prove it got the backend it asked for.
+    print("interpreter: %s -> %s" % (cc_mpy, os.path.realpath(cc_mpy)), flush=True)
+
+    # FORK: the default 9m leaves ~5MB free after the 4MB PSRAM bytearray, where
+    # a Mk4 has 632K of SRAM total (layout.ld) and keeps PSRAM off-heap
+    # entirely. So nothing here can run out of memory the way the product does.
+    # This knob is a calibration dial, not an equivalence: a 64-bit host object
+    # is wider than the same object on ARM, so pick a number by watching what
+    # breaks, not by copying the device's byte count. See TESTING.md.
+    heapsize = os.environ.get('COLDCARD_HEAP') or '9m'
+    if heapsize != '9m':
+        print("heapsize: %s (non-default)" % heapsize, flush=True)
+
     sim_boot = os.path.join(cwd, "sim_boot.py")
 
     log_base_dir = "/tmp"
@@ -934,7 +955,7 @@ Q1 specials:
     else:
         os.chdir('./work')
 
-    cc_cmd = [cc_mpy, '-X', 'heapsize=9m', '-i', sim_boot] + [str(i) for i in pass_fds] \
+    cc_cmd = [cc_mpy, '-X', 'heapsize=' + heapsize, '-i', sim_boot] + [str(i) for i in pass_fds] \
                         + metal_args + scan_args + sys.argv[1:] + [socket_path]
 
     if is_headless:

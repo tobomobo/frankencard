@@ -5,23 +5,27 @@
 #
 # BACKEND selects which crypto backend the simulator runs, because there are two
 # interpreters and testing the wrong one silently proves nothing:
-#   BACKEND=tz      (default)  trezor-crypto  -> coldcard-mpy-tz, run from unix-tz/
-#   BACKEND=libngu             libngu         -> coldcard-mpy,    run from unix/
+#   BACKEND=tz      (default)  trezor-crypto  -> coldcard-mpy-tz
+#   BACKEND=libngu             libngu         -> coldcard-mpy
+# Both run from unix/; simulator.py picks the interpreter from $COLDCARD_MPY and
+# prints which one it resolved. There used to be a hand-made, gitignored unix-tz/
+# for this, which meant the guard against running the wrong backend was a
+# directory nothing in the repo creates.
 BACKEND ?= tz
 
 PY       := $(CURDIR)/ENV/bin/python
 SIM_SOCK := /tmp/ckcc-simulator.sock
 SIM_LOG  := $(CURDIR)/.local/sim.log
 
-ifeq ($(BACKEND),tz)
-SIM_BIN  := $(CURDIR)/external/micropython/ports/unix/coldcard-mpy-tz
-SIM_DIR  := $(CURDIR)/unix-tz
-else ifeq ($(BACKEND),libngu)
-SIM_BIN  := $(CURDIR)/external/micropython/ports/unix/coldcard-mpy
 SIM_DIR  := $(CURDIR)/unix
+ifeq ($(BACKEND),tz)
+SIM_MPY  := coldcard-mpy-tz
+else ifeq ($(BACKEND),libngu)
+SIM_MPY  := coldcard-mpy
 else
 $(error BACKEND must be "tz" or "libngu", got "$(BACKEND)")
 endif
+SIM_BIN  := $(CURDIR)/external/micropython/ports/unix/$(SIM_MPY)
 
 # pysecp256k1 needs an explicit path to a shared libsecp256k1; see TESTING.md.
 export PYSECP_SO := $(CURDIR)/.local/lib/libsecp256k1.dylib
@@ -77,16 +81,24 @@ $(SIM_BIN): build
 
 sim-start: $(SIM_BIN)
 	@mkdir -p $(dir $(SIM_LOG))
-	@if [ -S $(SIM_SOCK) ]; then echo "simulator already running"; exit 0; fi; \
-	cd $(SIM_DIR) && nohup $(PY) simulator.py --headless > $(SIM_LOG) 2>&1 < /dev/null & \
-	for i in $$(seq 1 40); do \
-		[ -S $(SIM_SOCK) ] && break; sleep 0.5; \
-	done; \
+	@ln -sf $(SIM_BIN) $(SIM_DIR)/$(SIM_MPY)
+	@if [ ! -S $(SIM_SOCK) ]; then \
+		cd $(SIM_DIR) && COLDCARD_MPY=$(SIM_MPY) nohup $(PY) simulator.py --headless > $(SIM_LOG) 2>&1 < /dev/null & \
+		for i in $$(seq 1 40); do \
+			[ -S $(SIM_SOCK) ] && break; sleep 0.5; \
+		done; \
+	fi; \
 	if [ ! -S $(SIM_SOCK) ]; then \
 		echo "ERROR: simulator did not come up; see $(SIM_LOG)"; \
 		tail -20 $(SIM_LOG); exit 1; \
 	fi; \
-	echo "simulator up on $(SIM_SOCK)  [BACKEND=$(BACKEND)]"
+	if ! grep -q '^interpreter: .*/$(SIM_MPY) ' $(SIM_LOG); then \
+		echo "ERROR: something holds $(SIM_SOCK), but it is not $(SIM_MPY)."; \
+		grep '^interpreter:' $(SIM_LOG) || echo "  (no interpreter line in $(SIM_LOG))"; \
+		echo "  'make sim-stop' first -- testing the wrong backend proves nothing."; \
+		exit 1; \
+	fi; \
+	echo "simulator up on $(SIM_SOCK)  [BACKEND=$(BACKEND) $(SIM_MPY)]"
 
 sim-stop:
 	@pkill -f "simulator.py --headless" 2>/dev/null && echo "simulator stopped" || echo "not running"

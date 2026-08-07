@@ -117,16 +117,60 @@ and not required for the simulator itself.
 Simulator, headless (no XQuartz needed — `simulator.py:788`):
 
 ```bash
-cd unix && ../ENV/bin/python simulator.py --headless
+cd unix && COLDCARD_MPY=coldcard-mpy-tz ../ENV/bin/python simulator.py --headless
 ```
+
+`COLDCARD_MPY` names the interpreter to run, relative to `unix/`; it defaults to
+`coldcard-mpy`, the libngu one. Whichever you pick, the first line of output is
+`interpreter: ... -> ...` with the resolved path — read it, because the two
+binaries are indistinguishable once they are talking on the socket.
 
 Booted successfully when it prints `Start: mainline`; it listens on
 `/tmp/ckcc-simulator.sock`.
 
+### Memory pressure: `COLDCARD_HEAP`
+
+The simulator runs with a 9 MB MicroPython heap. `unix/variant/sim_psram.py`
+fakes the Mk4's PSRAM as a 4 MB `bytearray` **on that heap**, leaving ~5 MB
+free. A Mk4 has 632 KB of SRAM in total (`stm32/COLDCARD_MK4/layout.ld:21`) and
+its PSRAM is a separate external chip that never touches the heap.
+
+So the simulator has order-of-magnitude more room than the product, and code
+that would exhaust a real device — the reason `shared/psbt.py` streams instead
+of buffering — cannot fail here. `COLDCARD_HEAP` sets the heap so you can test
+under something closer to device pressure:
+
+```bash
+cd unix && COLDCARD_HEAP=5m COLDCARD_MPY=coldcard-mpy-tz ../ENV/bin/python simulator.py --headless
+```
+
+Measured free heap after the PSRAM allocation:
+
+| `COLDCARD_HEAP` | free      | note |
+| --------------- | --------- | ---- |
+| `9m` (default)  | 5012 KB   | ~8x the device's entire SRAM |
+| `5m`            | 964 KB    | roughly device-like, given 64-bit objects are wider than ARM ones |
+| 4.6m – 4.9m     | —         | **does not boot**; avoid |
+| `4300k`         | boots     | below the failure band |
+
+This is a calibration dial, not equivalence. Two caveats before you trust a
+result from it:
+
+- The failure band around 4.6–4.9 MB is not monotonic and is a host GC artifact
+  of allocating 4 MB contiguously out of a barely-larger heap. It says nothing
+  about the device. Do not tune into it.
+- You cannot reach device parity by lowering this number, because the 4 MB
+  PSRAM mock sits on the heap and sets a hard ~4 MB floor. Getting closer means
+  moving the PSRAM mock off the MicroPython heap (`mmap`), which nobody has
+  done.
+
+A test that passes at `9m` and fails at `5m` is worth reading; it is the only
+memory signal this simulator can give you.
+
 For the graphical screen on macOS use `--no-xterm` instead of `--headless`:
 
 ```bash
-cd unix-tz && ../ENV/bin/python simulator.py --q1 --no-xterm
+cd unix && COLDCARD_MPY=coldcard-mpy-tz ../ENV/bin/python simulator.py --q1 --no-xterm
 ```
 
 The simulated screen is SDL2, which is native Cocoa on macOS. Only upstream's
