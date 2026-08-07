@@ -97,7 +97,7 @@ every caller before editing; prefer reporting a finding over making the edit.
 | Area | Files |
 | --- | --- |
 | Seed generation & entropy | `shared/seed.py`, `shared/mk4.py` (`rng_seeding`), `stm32/COLDCARD*/rng.c`, `external/c-modules-trezor/ngutz/modngu_tz.c` |
-| The crypto shim (all of it) | `external/c-modules-trezor/ngutz/*.c` — ~1,875 lines handling private keys |
+| The crypto shim (all of it) | `external/c-modules-trezor/ngutz/*.c` — ~1,890 lines handling private keys |
 | Secret storage | `shared/stash.py`, `shared/nvstore.py`, `shared/pincodes.py` |
 | Signing & verification | `shared/psbt.py`, `shared/sigheader.py`, `stm32/*/sigheader.h` |
 | Secure elements | `shared/callgate.py`, `docs/secure-elements.md` |

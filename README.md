@@ -36,13 +36,14 @@ the same names with the same signatures and semantics, and **nothing in
 
 | Where the code lives | |
 |---|---|
-| `external/c-modules-trezor/ngutz/` | the `ngu` shim — ~1,875 lines of new C |
+| `external/c-modules-trezor/ngutz/` | the `ngu` shim — ~1,890 lines of new C |
 | `external/trezor-crypto/` | vendored upstream `crypto/`, MIT |
 | [`coldcard-changes.patch`](external/trezor-crypto/coldcard-changes.patch) | **the whole fork of trezor's code: 4 files, +55/−11, additive** |
 | `external/libngu/` | kept on purpose — the reference the tests diff against |
 
-Changed in COLDCARD's own tree: **6 files** — three `USER_C_MODULES` lines and
-three `MICROPY_PY_URANDOM` lines.
+Changed in COLDCARD's own firmware sources: **9 files** — three
+`USER_C_MODULES` lines (the swap), three `MICROPY_PY_URANDOM` lines and the
+TRNG error-flag check in `rng.c` (both hardening).
 
 ## Is it equivalent? (tested, not asserted)
 
@@ -55,16 +56,18 @@ make diff      # runs the same expression on both backends, demands equality
 | Deterministic crypto, 68 cases | **68 identical** |
 | ECDSA signatures, incl. low-R grind | **byte-identical** |
 | BIP-39 vector, `ecdh_multiply`, BIP32 derive/serialize | byte-exact |
-| Exception classes, 51 bad inputs | 47 identical, 3 intended |
+| Exception classes, 51 bad inputs | 47 identical, 4 intended |
 | Fuzzed base32, 427 inputs | 0 unexpected differences |
 | `test_wif` / `test_addr` / `test_msg` | identical pass/fail sets |
 | MK4 + Q firmware | build, `rng-code-check` passes |
 
-Four differences are intentional: `bytes(-1)`
-SIGBUSes there and raises `ValueError` here; `b32_decode` silently **truncates**
-at an embedded NUL there and is rejected here (it decodes TOTP secrets, so
-shortening one quietly is worse than refusing it); and `reseed()` is a no-op
-because there's no PRNG state left to reseed.
+Four differences are intentional, listed in full in
+[TREZOR-CRYPTO-BACKEND.md](TREZOR-CRYPTO-BACKEND.md#four-intentional-differences):
+`bytes(-1)` SIGBUSes on libngu and raises here; `b32_decode` silently
+**truncates** at an embedded NUL there and is rejected here; `derive()` refuses
+an index whose hardened bit contradicts its flag (the one case where the two
+backends produced **different keys**); and `reseed()` is a no-op because there is
+no PRNG state left to reseed.
 
 ## Run it
 

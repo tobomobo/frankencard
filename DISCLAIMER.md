@@ -35,7 +35,7 @@ the kind of code where a subtle mistake is invisible until funds are gone.
 - **Never run on physical hardware.** The firmware compiles for ARM and the
   build-time assertions pass, but no part of this has executed on a real
   COLDCARD. Everything verified so far was verified in the desktop simulator.
-- **Not independently audited.** Roughly 1,875 lines of new C handle private
+- **Not independently audited.** Roughly 1,890 lines of new C handle private
   keys. It has been differentially tested against the original implementation
   and reviewed, including by automated review passes — but reviewed is not
   audited, and no cryptographer has looked at it.

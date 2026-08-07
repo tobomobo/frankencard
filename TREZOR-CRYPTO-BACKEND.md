@@ -84,7 +84,7 @@ trezor-backed interpreters and require identical output:
 
 ```bash
 make diff                                       # runs all three
-python3 external/c-modules-trezor/difftest.py   # 64 deterministic cases
+python3 external/c-modules-trezor/difftest.py   # 68 deterministic cases
 python3 external/c-modules-trezor/errtest.py    # 51 bad-input cases, with an
                                                 #   allowlist of intended diffs
 python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
@@ -98,7 +98,7 @@ python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
 | `ecdh_multiply` (hashed, not raw ECDH) | byte-exact |
 | BIP32 derive / serialize / fingerprints | identical |
 | AES-CTR partial-block state + `copy()` | identical |
-| Exception classes, 51 bad inputs | **47 identical, 3 intended** |
+| Exception classes, 51 bad inputs | **47 identical, 4 intended** |
 | Fuzzed base32, 427 inputs | **0 unexpected differences** |
 | `test_wif.py`, `test_addr.py`, `test_msg.py` | identical pass/fail sets |
 | MK4 / Q firmware | build, `rng-code-check` passes |
@@ -142,14 +142,15 @@ decodes hand-typed passwords and relies on `0→O`, `1→L`, `8→B` remapping.
 |---|---|
 | `external/trezor-crypto/` | vendored `crypto/` — see [VENDOR.md](external/trezor-crypto/VENDOR.md) |
 | `external/trezor-crypto/coldcard-changes.patch` | the entire fork of trezor's code: 4 files, +55/−11, additive |
-| `external/c-modules-trezor/ngutz/` | the `ngu` shim (~1,875 lines of new C) |
+| `external/c-modules-trezor/ngutz/` | the `ngu` shim (~1,890 lines of new C) |
 | `external/c-modules-trezor/{difftest,errtest,fuzz_codecs}.py` | the differential harnesses |
 | `unix/variant-trezor/` | simulator build variant → `coldcard-mpy-tz` |
 | `stm32/*/c-modules-trezor/` | per-board module dirs for the ARM builds |
 
-Total change to COLDCARD's own tracked files: **6 files** — three
-`USER_C_MODULES` lines (the swap) and three `MICROPY_PY_URANDOM` lines (the
-hardening).
+Total change to COLDCARD's own firmware sources: **9 files** — three
+`USER_C_MODULES` lines (the swap), three `MICROPY_PY_URANDOM` lines and the
+SECS/CECS check in `rng.c` (both hardening). `COLDCARD_Q1/rng.c` is a symlink to
+the Mk4 file, so Q is covered by the same edit.
 
 ## Building
 
