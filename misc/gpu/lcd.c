@@ -22,7 +22,7 @@ const int NUM_PIXELS = (LCD_WIDTH*LCD_HEIGHT);
 const uint16_t COL_BLACK = 0;
 const uint16_t COL_WHITE = ~0;
 const uint16_t COL_RED = 0x00f8;            //SWAP16(0xf800);
-const uint16_t COL_FOREGROUND = 0x60fd;     //SWAB16(0xfd60);     // brand orange
+const uint16_t COL_FOREGROUND = 0xe637;     //SWAB16(0x37e6);     // FRANKENCARD green
 
 // progress bar specs
 const uint16_t PROG_HEIGHT = 5;

@@ -2,6 +2,11 @@
 #
 # Autogen'd file. See misc/q1font/render.py
 #
+# FRANKENCARD: palettes and colour constants hue-shifted from Coinkite's
+# amber (255,174,0) to green (48,255,48). Each entry keeps its original
+# brightness, so the font's anti-aliasing ramp is unchanged. Q only --
+# Mk4/Mk5 use a monochrome OLED and have no colour to set.
+#
 
 from ucollections import namedtuple
 
@@ -10,16 +15,16 @@ GlyphInfo = namedtuple('GlyphInfo', 'w h bits')
 
 #FONT_SHADES = [0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 223, 239, 255]
 TEXT_PALETTES = [
- b'\x00\x00\x08@\x18\xa0)\x009@I\xa0Z\x00j`z\xa0\x8b\x00\x9b`\xab\xc0\xbc\x00\xdc\xc0\xed\x00\xfd`', #normal
- b'\xfd`\xed\x00\xdc\xc0\xcc`\xbc\x00\xab\xa0\x9b`\x8b\x00z\xa0j@Z\x00I\xa09@\x18\xa0\x08@\x00\x00', # inverted
- b'\x00\x00\x08 \x10`\x18\xa0(\xe01 9@A\x80Q\xc0Z\x00b@r`z\xa0\x8b \x9b@\xa3\x80', # darker
+ b'\x00\x00\x00\x40\x00\xc0\x09\x41\x09\xc1\x0a\x41\x12\xc2\x13\x42\x13\xc2\x1c\x43\x1c\xe3\x25\x64\x25\xe4\x2e\xe5\x2f\x65\x37\xe6', #normal
+ b'\x37\xe6\x2f\x65\x2e\xe5\x26\x64\x25\xe4\x25\x64\x1c\xe3\x1c\x43\x13\xc2\x13\x42\x12\xc2\x0a\x41\x09\xc1\x00\xc0\x00\x40\x00\x00', # inverted
+ b'\x00\x00\x00\x40\x00\x80\x00\xc0\x09\x41\x09\x81\x09\xc1\x0a\x01\x0a\x81\x12\xc2\x13\x02\x13\x82\x13\xc2\x1c\x43\x1c\xe3\x1d\x23', # darker
 ]
 
 # same, but w/o byte swapping, packing (useful for simulator)
 #TEXT_PALETTE = [0x0000, 0x0840, 0x18a0, 0x2900, 0x3940, 0x49a0, 0x5a00, 0x6a60, 0x7aa0, 0x8b00, 0x9b60, 0xabc0, 0xbc00, 0xdcc0, 0xed00, 0xfd60]
-COL_TEXT = const(0xfd60)   # text foreground colour
-COL_DARK_TEXT = const(0xa380)   # "dark" pallette text foreground colour
-COL_SCROLL_DARK = const(0x51c0)   # "dark" colour for scrollbar
+COL_TEXT = const(0x37e6)   # text foreground colour
+COL_DARK_TEXT = const(0x1d23)   # "dark" pallette text foreground colour
+COL_SCROLL_DARK = const(0x0a81)   # "dark" colour for scrollbar
 
 CELL_W = const(9)
 CELL_H = const(22)

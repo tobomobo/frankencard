@@ -149,8 +149,8 @@ def make_icons():
                 h = MAX_HEIGHT
 
             if col == 'amber':
-                # brand colour
-                col = '#ffb000'
+                # brand colour -- FRANKENCARD green, was Coinkite amber #ffb000
+                col = '#30ff30'
 
             d.text(tl, body, font=f, fill=col)
             rv = img.crop( (0, 0, w,h) )

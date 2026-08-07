@@ -7,7 +7,7 @@ Verified working 2026-08-05 on macOS 27 (arm64), Apple clang, Python 3.14.
 ```bash
 make diff        # runs all three harnesses
 # difftest.py    68 cases; must report "0 differ" and "0 error on both"
-# errtest.py     51 cases; 3 intended divergences, 0 unexpected
+# errtest.py     51 cases; 4 intended divergences, 0 unexpected
 # fuzz_codecs.py 427 fuzzed base32 inputs
 ```
 
@@ -17,9 +17,9 @@ is a faithful replacement; `.github/workflows/trezor-backend.yml` runs them on
 every push, along with both ARM firmware builds and a check that no yasmarang
 symbol is linked in.
 
-There are **three** accepted divergences, all listed in errtest.py's
-`EXPECTED_DIVERGENCES` (negative byte count, embedded NUL in base32, and
-`reseed()` being a no-op). The harness fails on any *other* difference, and
+There are **four** accepted divergences, all listed in errtest.py's
+`EXPECTED_DIVERGENCES` (negative byte count, embedded NUL in base32, an
+ambiguous hardened bit in `derive()`, and `reseed()` being a no-op). The harness fails on any *other* difference, and
 refuses to run at all if the two binaries fail a backend-identity probe.
 
 ## Smoke test
@@ -147,11 +147,8 @@ Note `ngu.bip39` does not exist as a C module; the BIP-39 wordlist is Python
 
 ## Building for real hardware
 
-Needs the ARM toolchain, not yet installed:
-
-```bash
-brew install --cask gcc-arm-embedded
-```
+Needs the ARM toolchain (`brew install --cask gcc-arm-embedded`); it is
+installed here and both firmware images have been built with it.
 
 Then `cd stm32 && make -f MK-Makefile` (Mk4/Mk5) or `-f Q1-Makefile` (Q). Read
 the bricking warning in [AGENTS.md](AGENTS.md) before flashing anything.
