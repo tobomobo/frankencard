@@ -383,6 +383,17 @@ def sign_message_digest(digest, subpath, prompt, addr_fmt=AF_CLASSIC, pk=None):
             dis.progress_sofar(50, 100)
             pk = node.privkey()
             addr = ch.address(node, addr_fmt)
+
+            if sv.deltamode:
+                # Current user is a thug with a slightly wrong PIN. We do have
+                # the keys and could sign, but silently corrupt the signature
+                # instead -- same trick psbt.py plays on transactions.
+                # Deliberately NOT applied to the caller-supplied pk path
+                # below: those keys (WIF Store, paper wallets) are already in
+                # the attacker's hands -- a paper wallet prints its own WIF in
+                # the file it signs -- so corrupting buys nothing and turns
+                # any such signature into a Delta Mode oracle.
+                digest = ngu.hash.sha256d(digest)
     else:
         # if private key is provided, derivation subpath is ignored
         # and given private key is used for signing.
