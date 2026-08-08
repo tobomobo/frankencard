@@ -209,25 +209,27 @@ class SensitiveValues:
 
         self._bip39pw = bip39pw
 
+        from pincodes import pa
+
+        # Delta Mode is a property of the PIN they logged in with, not of which
+        # key we are about to use. Decide it the same way whether the caller
+        # handed us a secret (CCC key C, tmp seeds) or we fetch it below.
+        self.deltamode = pa.is_deltamode()
+        if self.deltamode and enforce_delta:
+            # wipe self before fetching secret
+            import callgate
+            callgate.fast_wipe()
+
         if secret is not None:
             # sometimes we already know the secret
             self.secret = secret
-            self.deltamode = False
 
             self.mode, self.raw, self.node = SecretStash.decode(self.secret, self._bip39pw)
         else:
             # More typical: fetch the secret from bootloader and SE
             # - but that's real slow, so avoid if possible
-            from pincodes import pa
-
             if not pa.has_secrets():
                 raise ZeroSecretException
-
-            self.deltamode = pa.is_deltamode()
-            if self.deltamode and enforce_delta:
-                # wipe self before fetching secret
-                import callgate
-                callgate.fast_wipe()
 
             if self._cache_secret and not bypass_tmp:
                 # they are using new BIP39 passphrase but we already have raw secret
