@@ -83,23 +83,28 @@ Three harnesses run the same expression against both the libngu-backed and
 trezor-backed interpreters and require identical output:
 
 ```bash
-make diff                                       # runs all three
-python3 external/c-modules-trezor/difftest.py   # 68 deterministic cases
-python3 external/c-modules-trezor/errtest.py    # 51 bad-input cases, with an
+make diff                                       # builds BOTH, then runs all three
+python3 external/c-modules-trezor/difftest.py   # 80 deterministic cases
+python3 external/c-modules-trezor/errtest.py    # 58 bad-input cases, with an
                                                 #   allowlist of intended diffs
-python3 external/c-modules-trezor/fuzz_codecs.py  # 427 fuzzed base32 inputs
+python3 external/c-modules-trezor/fuzz_codecs.py  # 474 fuzzed base32 inputs
 ```
+
+`make diff` builds both interpreters first. It used to run the harnesses against
+whatever binaries were already on disk, which meant the gate could certify a
+stale build against an equally stale reference and report green.
 
 | Check | Result |
 |---|---|
-| Deterministic crypto, 68 cases | **68 identical** |
-| ECDSA signatures, grind counters 0–3 | **byte-identical** |
+| Deterministic crypto, 80 cases | **75 identical, 5 known-differ** |
+| ECDSA signatures, grind counters 0–3 | **byte-identical** (serialized bytes compared, two key/digest pairs) |
+| ECDSA signatures, counters with bit 31 set | **differ** — see "Known gaps" |
 | BIP-39 canonical vector (`abandon…about`) | exact |
 | `ecdh_multiply` (hashed, not raw ECDH) | byte-exact |
 | BIP32 derive / serialize / fingerprints | identical |
 | AES-CTR partial-block state + `copy()` | identical |
-| Exception classes, 51 bad inputs | **47 identical, 4 intended** |
-| Fuzzed base32, 427 inputs | **0 unexpected differences** |
+| Exception classes, 58 bad inputs | **48 identical, 10 intended** |
+| Fuzzed base32, 474 inputs | **0 unexpected differences** (47 of them NUL-bearing) |
 | `test_wif.py`, `test_addr.py`, `test_msg.py` | identical pass/fail sets |
 | MK4 / Q firmware | build, `rng-code-check` passes |
 | Flash | **~39 KB smaller** than libngu |
@@ -263,6 +268,21 @@ correct.)
   Upstream's `82ced47a` added a fault raise to `rng_get_or_fault()` on the same
   path, so this is no longer specific to the fork — but it only raises after
   three failed attempts, so the window is narrower than a bare check would be.
+- **Signature counters with bit 31 set do not match libngu.**
+  `mod_secp256k1_tz.c` clamps a negative counter to 0; libngu's `k1.c` has no
+  clamp and passes the raw truncated word to RFC6979 as extra nonce entropy. So
+  `sign(k, d, -1)`, `sign(k, d, 2**31)` and `sign(k, d, 2**32-1)` all return the
+  **counter-0 signature** here, and three distinct signatures there. Not
+  reachable: `psbt.py`'s `ecdsa_grind_sign` only counts up from 0. Recorded in
+  `difftest.py`'s `KNOWN_DIFFS`; deleting the clamp restores exact parity.
+- **`ngu.random.uniform()` differs on negative and bit-31 bounds.** It casts to
+  `uint32_t` before the `mx <= 1` test, so `uniform(-1)` samples `[0, 2**32)`
+  where libngu returns 0. Callers pass 5, 1000, 2048 and `1<<28`. Separately,
+  libngu asserts `bit_length(mx) < 31`, so it raises `AssertionError` at bounds
+  ≥ `2**30` where this backend returns a value.
+- **`ngu.random.reseed()` accepts any object.** The no-op is deliberate (see
+  above), but it also dropped libngu's argument type check, so `reseed(None)`
+  raises `TypeError` there and silently succeeds here.
 - **Never run on real hardware.**
 - The `keypair` and `ngu.hash.sha512` objects have no finaliser, so key material
   is not wiped on GC. This **matches libngu**, so it was left alone rather than

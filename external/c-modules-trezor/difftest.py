@@ -100,6 +100,30 @@ CASES = [
     '(ngu.secp256k1.keypair(b"\\x03"*32), ngu.hash.sha256s(b"message"))',
     'str(len(ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
     'ngu.hash.sha256s(b"m"), 0).to_bytes()))',
+    # THE signature comparison. Everything above only checked that a signature
+    # recovers to the right pubkey and is 65 bytes long -- which any correct
+    # ECDSA implementation satisfies with a completely different nonce. The
+    # fork's actual claim is that RFC6979 + the counter-as-extra-entropy hook
+    # reproduce libngu's bytes EXACTLY, and until now no committed harness
+    # compared a single signature byte. psbt.py's ecdsa_grind_sign walks
+    # counter=0,1,2,... for a low-R signature, so cover that range.
+    'H(ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
+    'ngu.hash.sha256s(b"message"), 0).to_bytes())',
+    'H(ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
+    'ngu.hash.sha256s(b"message"), 1).to_bytes())',
+    'H(ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
+    'ngu.hash.sha256s(b"message"), 2).to_bytes())',
+    'H(ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
+    'ngu.hash.sha256s(b"message"), 3).to_bytes())',
+    # a second key/digest, so the match is not a property of one vector
+    'H(ngu.secp256k1.sign(b"\\x11"*32, ngu.hash.sha256s(b"tx"), 1).to_bytes())',
+    # raw-privkey and keypair forms must sign identically
+    '"SAME" if ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), 2).to_bytes() '
+    '== ngu.secp256k1.sign(ngu.secp256k1.keypair(b"\\x03"*32), '
+    'ngu.hash.sha256s(b"m"), 2).to_bytes() else "DIFFER"',
+    # the counter must actually reach the nonce: different counter, different sig
+    '"DISTINCT" if len({ngu.secp256k1.sign(b"\\x03"*32, '
+    'ngu.hash.sha256s(b"m"), c).to_bytes() for c in range(4)}) == 4 else "COLLIDED"',
     # --- aes ---
     'H(ngu.aes.CTR(b"\\x00"*32).cipher(b"hello world"))',
     'H(ngu.aes.CTR(b"\\x00"*32, b"\\x01"*16).cipher(b"hello world"))',
@@ -119,6 +143,51 @@ CASES = [
     'ngu.aes.CBC(True, b"\\x00"*32, b"\\x00"*16).cipher(b"\\x11"*32)) == b"\\x11"*32 '
     'else "DIFFER"',
 ]
+
+
+
+# ---------------------------------------------------------------------------
+# Cases that DO differ today, recorded with the exact outcome expected from
+# each backend. These are open findings, not decisions -- the point is that
+# they cannot change silently, in either direction.
+#
+# Stated as a relation rather than a hex constant, because the relation IS the
+# finding: mod_secp256k1_tz.c's `if(counter < 0) counter = 0;` has no
+# counterpart in libngu's k1.c, so every counter whose truncated 32-bit value
+# has bit 31 set collapses onto nonce_ptr=NULL -- i.e. produces the counter-0
+# signature. libngu instead passes the raw word through as RFC6979 extra
+# entropy and gets a distinct signature.
+#
+# Not reachable from firmware: psbt.py's ecdsa_grind_sign only ever counts up
+# from 0. Removing the clamp restores exact parity and is a one-line change;
+# it is deliberately NOT part of this commit, which changes no shim code.
+# ---------------------------------------------------------------------------
+SIGN_AT = ('ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), %s).to_bytes()')
+_COLLAPSE = ('"COLLAPSED" if %s == %s else "DISTINCT"'
+             % (SIGN_AT % "%s", SIGN_AT % "0"))
+
+KNOWN_DIFFS = {
+    _COLLAPSE % "-1": (
+        "DISTINCT", "COLLAPSED",
+        "shim clamps a negative counter to 0; libngu passes 0xFFFFFFFF through"),
+    _COLLAPSE % "2**31": (
+        "DISTINCT", "COLLAPSED",
+        "shim clamps a bit-31 counter to 0; libngu passes 0x80000000 through"),
+    _COLLAPSE % "2**32-1": (
+        "DISTINCT", "COLLAPSED",
+        "truncates to -1 in both; only the shim then clamps it to 0"),
+    # ngu.random.uniform() casts to uint32 BEFORE the `mx <= 1` test, so a
+    # negative or bit-31 bound becomes a huge unsigned range instead of
+    # libngu's 0. Callers pass 5, 1000, 2048 and 1<<28, so unreachable.
+    # Four draws: a false "True" here needs 2**-128, not 2**-32.
+    'str(all(ngu.random.uniform(-1) == 0 for _ in range(4)))': (
+        "True", "False",
+        "shim samples [0,2**32) where libngu's signed `mx <= 1` returns 0"),
+    'str(all(ngu.random.uniform(2**31) == 0 for _ in range(4)))': (
+        "True", "False",
+        "same: bit-31 bound is negative to libngu, huge unsigned to the shim"),
+}
+CASES = CASES + sorted(KNOWN_DIFFS)
 
 
 # ---------------------------------------------------------------------------
@@ -193,8 +262,9 @@ def main():
     if not check_backends():
         return 2
 
-    same = differ = both_err = 0
+    same = differ = both_err = known = 0
     problems = []
+    fired = set()
 
     for expr in CASES:
         a = run(LIBNGU, expr)
@@ -204,9 +274,30 @@ def main():
             if a.startswith("ERROR") or a == "TIMEOUT":
                 both_err += 1
                 print("  both-err  %-62s %s" % (short, a[:40]))
+            elif expr in KNOWN_DIFFS:
+                # A recorded divergence that stopped diverging is a change in
+                # behaviour too -- most likely someone fixed it. Say so loudly
+                # rather than passing, so the entry gets deleted with the fix.
+                differ += 1
+                problems.append((expr, a, b))
+                print("  FIXED?    %-62s" % short)
+                print("      both now: %s -- delete this KNOWN_DIFFS entry" % a[:80])
             else:
                 same += 1
                 print("  ok        %-62s" % short)
+        elif expr in KNOWN_DIFFS:
+            want_a, want_b, why = KNOWN_DIFFS[expr]
+            if a == want_a and b == want_b:
+                known += 1
+                fired.add(expr)
+                print("  known     %-62s libngu=%s trezor=%s" % (short, a, b))
+                print("      ^ open finding: %s" % why)
+            else:
+                differ += 1
+                problems.append((expr, a, b))
+                print("  DIFFER    %-62s" % short)
+                print("      expected libngu=%s trezor=%s" % (want_a, want_b))
+                print("      got      libngu=%s trezor=%s" % (a[:60], b[:60]))
         else:
             differ += 1
             problems.append((expr, a, b))
@@ -214,8 +305,9 @@ def main():
             print("      libngu: %s" % a[:110])
             print("      trezor: %s" % b[:110])
 
-    total = same + differ + both_err
-    print("\n%d identical, %d differ, %d error on both" % (same, differ, both_err))
+    total = same + differ + both_err + known
+    print("\n%d identical, %d known-differ, %d differ, %d error on both"
+          % (same, known, differ, both_err))
 
     # Comparison floor: a harness that silently compares nothing must not pass.
     if total != len(CASES):
@@ -224,6 +316,13 @@ def main():
     if both_err:
         print("FATAL: %d case(s) errored on BOTH backends -- a case that fails "
               "everywhere proves nothing and is probably a broken vector." % both_err)
+        return 2
+    stale = sorted(set(KNOWN_DIFFS) - fired)
+    if stale:
+        print("FATAL: %d recorded divergence(s) did not occur as recorded:"
+              % len(stale))
+        for k in stale:
+            print("  %s" % k)
         return 2
     if problems:
         print("\nDiffering cases need review: a divergence may be intended "
