@@ -204,9 +204,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(s_sig_verify_recover_obj, s_sig_verify_recover)
 // into the HMAC-DRBG seed as priv||hash||extra -- the same layout libsecp256k1
 // uses for key32||msg32||data32.
 //
-// Result: signatures are byte-identical to the libngu build for the counters
-// the firmware actually uses (0,1,2,... -- difftest.py compares the serialized
-// bytes for 0-3), but NOT for every counter value: see the clamp below.
+// Result: signatures are byte-identical to the libngu build for every counter
+// value (difftest.py compares the serialized bytes for 0-3, the range the
+// firmware actually uses).
 
 STATIC mp_obj_t s_sign(mp_obj_t privkey_in, mp_obj_t digest_in, mp_obj_t counter_in) {
     GET_BUF(digest, digest_in, MP_BUFFER_READ);
@@ -227,15 +227,9 @@ STATIC mp_obj_t s_sign(mp_obj_t privkey_in, mp_obj_t digest_in, mp_obj_t counter
         pk = privkey.buf;
     }
 
+    // raw truncated 32-bit word, exactly as libngu's k1.c takes it -- no clamp,
+    // so a counter with bit 31 set stays distinct from counter 0.
     int counter = mp_obj_get_int_truncated(counter_in);
-    // KNOWN DIVERGENCE (unfixed, tracked in difftest.py KNOWN_DIFFS): libngu's
-    // k1.c has no clamp -- it feeds the raw truncated word to RFC6979, so
-    // counter=-1 signs with extra-entropy 0xFFFFFFFF. Here every counter with
-    // bit 31 set collapses to nonce_ptr=NULL, i.e. produces the SAME signature
-    // as counter=0. Unreachable from firmware (psbt.py's ecdsa_grind_sign only
-    // counts up from 0), so it is recorded rather than changed; deleting this
-    // line restores exact parity.
-    if(counter < 0) counter = 0;
 
     mp_obj_sig_t *rv = m_new_obj(mp_obj_sig_t);
     rv->base.type = &s_sig_type;
@@ -244,7 +238,7 @@ STATIC mp_obj_t s_sign(mp_obj_t privkey_in, mp_obj_t digest_in, mp_obj_t counter
     // (see its k1.c): 32 bytes, counter in the first host-endian word, rest
     // zero, and NULL when counter is 0. With init_rfc6979_ex() threading this
     // into the DRBG seed the same way libsecp256k1 does, signatures are
-    // byte-identical to the libngu build -- for non-negative counters.
+    // byte-identical to the libngu build for every counter value.
     uint32_t nonce_data[8] = { (uint32_t)counter, 0, };
     const uint8_t *nonce_ptr = counter ? (const uint8_t *)nonce_data : NULL;
 

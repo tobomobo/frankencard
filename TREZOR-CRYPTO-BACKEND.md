@@ -96,9 +96,9 @@ stale build against an equally stale reference and report green.
 
 | Check | Result |
 |---|---|
-| Deterministic crypto, 80 cases | **75 identical, 5 known-differ** |
+| Deterministic crypto, 81 cases | **79 identical, 2 known-differ** |
 | ECDSA signatures, grind counters 0–3 | **byte-identical** (serialized bytes compared, two key/digest pairs) |
-| ECDSA signatures, counters with bit 31 set | **differ** — see "Known gaps" |
+| ECDSA signatures, counters with bit 31 set | **byte-identical** (`-1`, `2**31`, `2**32-1`) |
 | BIP-39 canonical vector (`abandon…about`) | exact |
 | `ecdh_multiply` (hashed, not raw ECDH) | byte-exact |
 | BIP32 derive / serialize / fingerprints | identical |
@@ -268,13 +268,6 @@ correct.)
   Upstream's `82ced47a` added a fault raise to `rng_get_or_fault()` on the same
   path, so this is no longer specific to the fork — but it only raises after
   three failed attempts, so the window is narrower than a bare check would be.
-- **Signature counters with bit 31 set do not match libngu.**
-  `mod_secp256k1_tz.c` clamps a negative counter to 0; libngu's `k1.c` has no
-  clamp and passes the raw truncated word to RFC6979 as extra nonce entropy. So
-  `sign(k, d, -1)`, `sign(k, d, 2**31)` and `sign(k, d, 2**32-1)` all return the
-  **counter-0 signature** here, and three distinct signatures there. Not
-  reachable: `psbt.py`'s `ecdsa_grind_sign` only counts up from 0. Recorded in
-  `difftest.py`'s `KNOWN_DIFFS`; deleting the clamp restores exact parity.
 - **`ngu.random.uniform()` differs on negative and bit-31 bounds.** It casts to
   `uint32_t` before the `mx <= 1` test, so `uniform(-1)` samples `[0, 2**32)`
   where libngu returns 0. Callers pass 5, 1000, 2048 and `1<<28`. Separately,
