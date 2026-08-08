@@ -31,7 +31,13 @@ class LoginUX:
 
     def shuffle_keys(self):
         keys = [str(i) for i in range(10)]
-        random.shuffle(keys)
+        try:
+            random.shuffle(keys)
+        except OSError:
+            # An RNG fault may reduce keypad randomization, but must not
+            # block PIN entry. Keys must still be assigned: show_pin() and
+            # the input remap index into this list whenever it is truthy.
+            pass
         self.randomize = keys
 
     def reset(self):
