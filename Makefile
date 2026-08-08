@@ -49,17 +49,19 @@ export CFLAGS_EXTRA := -Wno-error
 #   make test PYTEST_ARGS="test_seed_xor.py -q"
 PYTEST_ARGS ?= test_bip39pw.py -k test_tmp_on_xprv_master -q
 
-.PHONY: help ci build test sim-start sim-stop clean-local
+.PHONY: help ci build test sim sim-start sim-stop clean-local
 
 help:
 	@echo "make diff        - differential tests: both backends must agree  <- REAL gate"
 	@echo "make build       - build the unix simulator for BACKEND"
+	@echo "make sim         - simulator with GUI, foreground; Ctrl-Q quits"
 	@echo "make sim-start   - start the simulator headless, wait for socket"
 	@echo "make sim-stop    - stop it"
 	@echo "make test        - run the smoke pytest subset (simulator must be up)"
 	@echo "make ci          - diff + build + start + test + stop"
 	@echo ""
 	@echo "BACKEND=tz|libngu         which crypto backend (default: tz)"
+	@echo "SIM_ARGS=--q1             Q instead of Mk5 (or --mk4; make sim only)"
 	@echo "PYTEST_ARGS=\"file.py -q\"  run more than the smoke gate (slow)"
 	@echo "See TESTING.md for what this covers and what it does not."
 
@@ -87,6 +89,12 @@ build:
 endif
 
 $(SIM_BIN): build
+
+# Interactive: SDL window, firmware output in this terminal, Ctrl-Q to quit.
+# SIM_ARGS=--q1 for the Q, --mk4 for the retro look; default is Mk5.
+sim: $(SIM_BIN)
+	@ln -sf $(SIM_BIN) $(SIM_DIR)/$(SIM_MPY)
+	cd $(SIM_DIR) && COLDCARD_MPY=$(SIM_MPY) $(PY) simulator.py --no-xterm $(SIM_ARGS)
 
 sim-start: $(SIM_BIN)
 	@mkdir -p $(dir $(SIM_LOG))

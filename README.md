@@ -76,7 +76,11 @@ cd unix && make setup && make ngu-setup && CFLAGS_EXTRA="-Wno-error" make
 make diff                       # prove the backends agree
 make ci                         # boot the simulator + smoke test
 make ci BACKEND=libngu          # ...and the same against the original
+make sim                        # SEE it: simulator GUI (make sim SIM_ARGS=--q1 for the Q)
 ```
+
+First time on a fresh clone: submodules, a venv and one patch first —
+[TESTING.md](TESTING.md#from-scratch-setup) has the copy-paste block.
 
 ## Docs
 
