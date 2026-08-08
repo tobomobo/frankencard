@@ -30,6 +30,18 @@ CASES = [
     'ngu.random.bytes(4097)',                  # over cap
     'ngu.random.bytes(-1)',
     'ngu.random.uniform(0)',
+    # libngu asserts bit_length(mx) < 31, so a bound at/above 2**30 raises
+    # AssertionError there and returns a value here. Not reachable: the largest
+    # bound any caller passes is multisig.py's 1<<28.
+    'ngu.random.uniform(1<<30)',
+    # reseed() takes an int in libngu (yasmarang_pad = get_int_truncated) and so
+    # rejects other types. The trezor backend's reseed is a deliberate no-op --
+    # but a no-op that also dropped libngu's ARGUMENT CHECKING, which is not part
+    # of that decision. shared/mk4.py:rng_seeding() is the only caller.
+    'ngu.random.reseed(None)',
+    'ngu.random.reseed("x")',
+    'ngu.random.reseed([1])',
+    'ngu.random.reseed(1)',                    # valid: must be accepted by both
     # codecs
     'ngu.codecs.b58_decode("notbase58!!!")',
     'ngu.codecs.b58_decode("")',
@@ -38,6 +50,8 @@ CASES = [
     'ngu.codecs.b32_decode("A")',              # invalid base32 length
     'ngu.codecs.b32_decode("MZXW\\x006YTBOI")',  # embedded NUL: libngu truncates
     'ngu.codecs.b32_decode("A\\x00B")',
+    'ngu.codecs.b32_decode("\\x00MZXW6YTBOI")',  # leading NUL: libngu -> b""
+    'ngu.codecs.b32_decode("MZXW6YTBOI\\x00")',  # trailing NUL: libngu decodes it all
     'ngu.codecs.b58_encode(b"x" * 200)',       # over 128-byte working buffer
     'ngu.codecs.segwit_decode("notanaddress")',
     'ngu.codecs.segwit_decode("bc1qqqqqqq")',  # bad checksum
@@ -85,30 +99,74 @@ CASES = [
 ]
 
 # Divergences that are deliberate. Anything NOT in here is a bug.
-# Keyed by a substring of the expression.
+#
+# Keyed by the FULL expression, and stating the exact outcome expected from
+# EACH backend -- not just a reason. The previous version keyed on a substring
+# and recorded only prose, which meant an allowlisted case still passed if the
+# two backends silently converged, or if BOTH changed to some entirely new pair
+# of outcomes. An allowlist that cannot fail is not evidence.
+#
+# "CRASH" matches any CRASH(rc=N): the signal number for a SIGBUS differs
+# between macOS and the Linux CI runner, and that is not what is being asserted.
 EXPECTED_DIVERGENCES = {
     # libngu SIGBUSes on a negative count; we raise ValueError.
-    "ngu.random.bytes(-1)":
-        "libngu crashes (SIGBUS) on negative count",
+    'ngu.random.bytes(-1)': (
+        "CRASH", "ValueError",
+        "libngu crashes (SIGBUS) on negative count"),
     # libngu's decoder loop is `while (*ptr)`, so it stops at an embedded NUL
     # and silently returns a TRUNCATED result -- e.g. b'fo' for a 6-byte
     # secret. These decode TOTP secrets (users.py) and QR payloads (bbqr.py),
     # where silently shortening secret material is worse than refusing it.
-    'b32_decode("MZXW\\x006YTBOI")':
-        "libngu silently truncates at an embedded NUL",
-    'b32_decode("A\\x00B")':
-        "libngu silently truncates at an embedded NUL",
+    'ngu.codecs.b32_decode("MZXW\\x006YTBOI")': (
+        "no-raise", "ValueError",
+        "libngu silently truncates at an embedded NUL"),
+    'ngu.codecs.b32_decode("A\\x00B")': (
+        "no-raise", "ValueError",
+        "libngu silently truncates at an embedded NUL"),
+    'ngu.codecs.b32_decode("\\x00MZXW6YTBOI")': (
+        "no-raise", "ValueError",
+        "libngu truncates to b'' at a LEADING NUL"),
+    # The one NUL position where libngu is not lossy -- it stops at the NUL
+    # having already consumed every real character, so it returns the FULL
+    # value. The shim still refuses, because it scans all slen bytes. Kept
+    # strict: "reject NUL in base32" is easier to reason about than "reject it
+    # unless it happens to be last".
+    'ngu.codecs.b32_decode("MZXW6YTBOI\\x00")': (
+        "no-raise", "ValueError",
+        "trailing NUL: libngu decodes fully (not truncated); we still refuse"),
     # See the DIVERGENCE comment in mod_hdnode_tz.c s_hdnode_derive().
-    'derive(0x80000000, False)':
-        "ambiguous hardened bit: backends produce DIFFERENT keys; we refuse",
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).derive(0x80000000, False)': (
+        "no-raise", "ValueError",
+        "ambiguous hardened bit: backends produce DIFFERENT keys; we refuse"),
+    # --- known, NOT yet fixed. These are findings, recorded so they cannot
+    # --- drift silently; they are not decisions. See TREZOR-CRYPTO-BACKEND.md.
+    'ngu.random.uniform(1<<30)': (
+        "AssertionError", "no-raise",
+        "libngu asserts bit_length(mx) < 31; unreached (max caller bound 1<<28)"),
+    'ngu.random.reseed(None)': (
+        "TypeError", "no-raise",
+        "shim's reseed no-op also dropped libngu's argument type check"),
+    'ngu.random.reseed("x")': (
+        "TypeError", "no-raise",
+        "shim's reseed no-op also dropped libngu's argument type check"),
+    'ngu.random.reseed([1])': (
+        "TypeError", "no-raise",
+        "shim's reseed no-op also dropped libngu's argument type check"),
 }
 
 
-def expected(expr):
-    for k, why in EXPECTED_DIVERGENCES.items():
-        if k in expr:
-            return why
-    return None
+def expected(expr, a, b):
+    """Return (matched, why). matched is False if the pair is not the one recorded."""
+    ent = EXPECTED_DIVERGENCES.get(expr)
+    if ent is None:
+        return False, None
+    want_a, want_b, why = ent
+    ok_a = a.startswith("CRASH") if want_a == "CRASH" else a == want_a
+    ok_b = b.startswith("CRASH") if want_b == "CRASH" else b == want_b
+    if ok_a and ok_b:
+        return True, why
+    return False, ("expected libngu=%s trezor=%s, got libngu=%s trezor=%s"
+                   % (want_a, want_b, a, b))
 
 
 WRAPPER = """import ngu
@@ -140,6 +198,7 @@ def main():
             return 2
 
     same = differ = intended = 0
+    fired = set()
     for expr in CASES:
         a = run(LIBNGU, expr)
         b = run(TREZOR, expr)
@@ -149,14 +208,17 @@ def main():
             same += 1
             print("  ok      %-60s both -> %s" % (short, a))
         else:
-            why = expected(expr)
-            if why:
+            ok, why = expected(expr, a, b)
+            if ok:
                 intended += 1
+                fired.add(expr)
                 print("  ok*     %-60s libngu=%s trezor=%s" % (short, a, b))
                 print("          ^ intended: %s" % why)
             else:
                 differ += 1
                 print("  DIFFER  %-60s libngu=%s trezor=%s" % (short, a, b))
+                if why:
+                    print("          ^ %s" % why)
 
     total = same + intended + differ
     print("\n%d matching, %d intended divergences, %d UNEXPECTED"
@@ -164,6 +226,18 @@ def main():
     # Floor: a harness that compares nothing must not report success.
     if total != len(CASES):
         print("FATAL: only %d of %d cases produced a comparison" % (total, len(CASES)))
+        return 2
+    # Every recorded divergence must actually occur. One that stops happening is
+    # as much a change in behaviour as a new one appearing -- and it would
+    # otherwise sit in this file forever describing something that is no longer
+    # true. (This is what catches a divergence being fixed but not documented.)
+    stale = sorted(set(EXPECTED_DIVERGENCES) - fired)
+    if stale:
+        print("FATAL: %d allowlisted divergence(s) did not occur:" % len(stale))
+        for k in stale:
+            print("  %s" % k)
+        print("  Either the backends now agree (delete the entry) or the case "
+              "was renamed (the key must be the FULL expression).")
         return 2
     if differ:
         print("FAIL: unexpected divergence from libngu")
