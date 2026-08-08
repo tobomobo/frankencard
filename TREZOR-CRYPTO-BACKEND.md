@@ -200,16 +200,17 @@ soon.
 | `unix/variant-trezor/` | simulator build variant → `coldcard-mpy-tz` |
 | `stm32/*/c-modules-trezor/` | per-board module dirs for the ARM builds |
 
-Total change to COLDCARD's own firmware sources: **7 files** — three
-`USER_C_MODULES` lines (the swap), three `MICROPY_PY_URANDOM` lines (hardening),
-and the TRNG fault check in `stm32/COLDCARD/rng.c` (Mk3 only, inert — see
-[Hardware coverage](#hardware-coverage)).
+Total change to COLDCARD's own firmware sources: **6 files** — three
+`USER_C_MODULES` lines (the swap) and three `MICROPY_PY_URANDOM` lines
+(hardening).
 
 This project added its own TRNG seed/clock-error check to `rng.c` in `8c8d3ba6`;
-upstream arrived at the same fix independently and better in `82ced47a`, so
-`COLDCARD_MK4/rng.c` and `stm32/mk4-bootloader/rng.c` were reset to upstream's
-version and are no longer a divergence. `COLDCARD_Q1/rng.c` is a symlink to the
-Mk4 file, so Q follows it.
+upstream arrived at the same fix independently and better in `82ced47a`, so all
+three `rng.c` files were reset to upstream's version and are no longer a
+divergence. `COLDCARD_Q1/rng.c` is a symlink to the Mk4 file, so Q follows it;
+`stm32/COLDCARD/rng.c` (Mk3, which nothing on `master` builds) went back to
+upstream's pre-`82ced47a` state rather than keep an unbuilt, unverified variant
+of the check.
 
 ## Building
 
