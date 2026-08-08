@@ -229,14 +229,17 @@ class Display:
             # status icons not a concern
             return
 
-        cy = (py - TOP_MARGIN) // CELL_H
-        cx = (px - LEFT_MARGIN) // CELL_W
-        cw = (w+CELL_W) // CELL_W
-        ch = (h+CELL_H) // CELL_H
-        #print('pixel %dx%d @ (%d,%d) => %dx%d @ (%d,%d)' % (w, h, px,py,  cw, ch, cx,cy))
+        # last cell the image touches, not (size+cell)//cell: that rounding
+        # ignores where the image starts inside a cell, and under-marks when
+        # the far edge crosses into another cell -- the unmarked sliver is
+        # never redrawn and the image bleeds through later screens
+        cy = max(0, (py - TOP_MARGIN) // CELL_H)
+        cx = max(0, (px - LEFT_MARGIN) // CELL_W)
+        cy2 = (py - TOP_MARGIN + h - 1) // CELL_H
+        cx2 = (px - LEFT_MARGIN + w - 1) // CELL_W
 
-        for y in range(cy, cy+ch):
-            for x in range(cx, cx+cw+1):
+        for y in range(cy, cy2+1):
+            for x in range(cx, cx2+1):
                 try:
                     self.last_buf[y][x] = self.next_buf[y][x] = 0xfffe
                 except IndexError:
