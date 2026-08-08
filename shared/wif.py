@@ -51,6 +51,15 @@ def save_wif_store_items(new_wifs):
     unique = []
     dups = 0
 
+    # Settings round-trip through JSON, so anything already stored comes back
+    # as a list. Callers hand us tuples, and (pk, sk) != [pk, sk], so without
+    # this every re-import looked new and the store filled up with duplicates.
+    # Normalise here rather than at each caller: this is the only comparison.
+    # Both sides, because settings.load() is not the only way tuples appear --
+    # tests seed the store directly, and nothing guarantees the shapes match.
+    saved = [list(i) for i in saved]
+    new_wifs = [list(i) for i in new_wifs]
+
     for item in new_wifs:
         if item in unique:
             continue

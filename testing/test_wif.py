@@ -390,6 +390,35 @@ def test_wif_store_import_duplicate(settings_remove, import_wif_to_store, settin
     assert 'duplicate WIF' in story
 
 
+def test_wif_store_import_duplicate_after_reload(settings_remove, import_wif_to_store,
+                                                 settings_get, cap_story, goto_home, sim_exec):
+    # Dedup has to survive the settings JSON round-trip: stored entries come
+    # back as lists while callers build tuples, and (pk, sk) != [pk, sk].
+    # A power cycle is not the only way to get there -- return_to_master_seed()
+    # calls settings.load() too, so leaving and re-entering a tmp seed is
+    # enough. Ported from Coldcard/firmware#709.
+    goto_home()
+    settings_remove("wifs")
+
+    wif_list = [make_fake_wif() for _ in range(4)]
+
+    import_wif_to_store(wif_list)
+    assert len(settings_get("wifs")) == 4
+
+    # What the bug needs is the JSON round-trip settings.load() performs.
+    # Round-trip just this key: a real settings.load() also discards unsaved
+    # in-memory state, which breaks every test that runs after this one.
+    sim_exec('import ujson;'
+             'settings.set("wifs", ujson.loads(ujson.dumps(settings.get("wifs"))))')
+    assert all(isinstance(i, list) for i in settings_get("wifs"))
+
+    import_wif_to_store(wif_list, early_exit=True)
+    assert len(settings_get("wifs")) == 4
+
+    title, story = cap_story()
+    assert 'duplicate WIF' in story
+
+
 @pytest.mark.parametrize("way", ["qr", "sd", "nfc"])
 def test_wif_store_export_all(way, goto_home, settings_remove, import_wif_to_store, pick_menu_item,
                               load_export, press_cancel):
