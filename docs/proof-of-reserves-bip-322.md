@@ -69,8 +69,11 @@ of any additional reserve UTXOs. In that case it does not show transaction
 input/output counts. When the PSBT contains additional inputs, FRANKENCARD labels
 the request as `Proof of Reserves` and shows the reserve amount.
 
-If the message contains non-ASCII characters, FRANKENCARD warns that some
-characters may not be readable on screen.
+The message must be printable ASCII; tab and newline are allowed. Non-ASCII
+and control characters are rejected rather than warned about, because the
+story renderer gives `\x01`, `\x02` and `\x03` in-band meaning and would
+display something other than what gets signed. Whitespace the verifier chose
+— leading, trailing or repeated spaces — is accepted.
 
 Legacy PoR PSBTs without `PSBT_GLOBAL_GENERIC_SIGNED_MESSAGE` are rejected by
 this flow.
