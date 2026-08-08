@@ -202,8 +202,11 @@ STATIC mp_obj_t s_hdnode_serialize(mp_obj_t self_in, mp_obj_t version_in,
     mp_obj_hdnode_t *self = MP_OBJ_TO_PTR(self_in);
     raise_on_invalid(self);
 
-    uint32_t version = mp_obj_get_int_truncated(version_in);
-    bool want_private = mp_obj_is_true(want_private_in);
+    // Same conversions libngu used, so the argument-checking behaviour matches
+    // on both word sizes: get_int() raises OverflowError past a machine word,
+    // and neither call accepts a non-integer the way mp_obj_is_true() would.
+    uint32_t version = mp_obj_get_int(version_in);
+    bool want_private = !!mp_obj_get_int_truncated(want_private_in);
 
     uint8_t out[78], *p = out;
 
@@ -260,7 +263,11 @@ STATIC mp_obj_t s_hdnode_deserialize(mp_obj_t self_in, mp_obj_t encoded) {
                                         raw, sizeof(raw));
     // DIVERGENCE: libngu could tell "encoding error" (bad base58/checksum)
     // apart from "bad len"; trezor's decode collapses both into a 0 return.
+    // raw holds chain code + private key for an xprv, so every exit from here
+    // on has to wipe it -- a raise is an exit, and MicroPython leaves via NLR
+    // longjmp, so there is no unwind to hang the cleanup on.
     if(got != sizeof(raw)) {
+        memzero(raw, sizeof(raw));
         mp_raise_ValueError(MP_ERROR_TEXT("encoding error"));
     }
 
@@ -276,6 +283,7 @@ STATIC mp_obj_t s_hdnode_deserialize(mp_obj_t self_in, mp_obj_t encoded) {
         // libngu reached secp256k1_ec_pubkey_create and raised RuntimeError.
         if(!hdnode_from_xprv(depth, child_num, chain_code, &key[1],
                                 SECP256K1_NAME, &self->node)) {
+            memzero(raw, sizeof(raw));
             mp_raise_ValueError(MP_ERROR_TEXT("bad privkey"));
         }
         self->have_private = true;
@@ -283,10 +291,12 @@ STATIC mp_obj_t s_hdnode_deserialize(mp_obj_t self_in, mp_obj_t encoded) {
     } else if((key[0] == 0x02) || (key[0] == 0x03)) {
         if(!hdnode_from_xpub(depth, child_num, chain_code, key,
                                 SECP256K1_NAME, &self->node)) {
+            memzero(raw, sizeof(raw));
             mp_raise_ValueError(MP_ERROR_TEXT("bad pubkey"));
         }
         self->have_private = false;
     } else {
+        memzero(raw, sizeof(raw));
         mp_raise_ValueError(MP_ERROR_TEXT("bad pubkey"));
     }
 
@@ -377,8 +387,10 @@ STATIC mp_obj_t s_hdnode_derive(mp_obj_t self_in, mp_obj_t next_child_in,
     mp_obj_hdnode_t *self = MP_OBJ_TO_PTR(self_in);
     raise_on_invalid(self);
 
-    uint32_t next_child = mp_obj_get_int_truncated(next_child_in);
-    bool hard = mp_obj_is_true(hard_in);
+    // As in serialize(): libngu's conversions, so a non-integer or an
+    // out-of-word index raises here too instead of being silently coerced.
+    uint32_t next_child = mp_obj_get_int(next_child_in);
+    bool hard = !!mp_obj_get_int(hard_in);
 
     // DIVERGENCE (deliberate, stricter than both backends): an index that
     // already carries bit 31 while hard=False is ambiguous, and the two

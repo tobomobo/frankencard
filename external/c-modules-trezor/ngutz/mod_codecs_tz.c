@@ -76,7 +76,12 @@ STATIC mp_obj_t tz_b32_decode(mp_obj_t arg) {
     //   - remap mistyped '0'->'O', '1'->'L', '8'->'B'
     //   - case insensitive
     //   - a trailing partial group contributes no byte (no error)
-    int buffer = 0, bits_left = 0;
+    // buffer is never masked, so it shifts left 5 per character without bound
+    // and reaches bit 31 after seven of them. libngu declared it `int`, where
+    // that is signed overflow (UB); unsigned here, which is the same output on
+    // every compiler either has ever been built with, minus the UB.
+    uint32_t buffer = 0;
+    int bits_left = 0;
     vstr_t v;
     vstr_init(&v, (slen * 5 / 8) + 1);
 
@@ -163,13 +168,14 @@ STATIC mp_obj_t tz_segwit_encode(mp_obj_t hrp_in, mp_obj_t witver_in, mp_obj_t p
     int witver = mp_obj_get_int_truncated(witver_in);
     GET_BUF(prog, prog_in, MP_BUFFER_READ);
 
-    // DIVERGENCE: bech32_encode() does not bounds-check its output, and libngu
-    // gave it a 127-byte stack buffer regardless of hrp length. Output is
-    // strlen(hrp) + 1 + 65 + 6 + 1 at most, so cap the hrp instead.
-    if(strlen(hrp) > 40) {
-        mp_raise_ValueError(MP_ERROR_TEXT("hrp"));
-    }
-
+    // tmp[] is libngu's size, and it cannot overflow: segwit_addr_encode()
+    // rejects witprog_len > 40, and bech32_encode() returns 0 on
+    // `strlen(hrp) + 7 + data_len > 90` BEFORE its first write to output. So
+    // the most that is ever written is 90 characters plus the NUL.
+    //
+    // An earlier version capped hrp at 40 here, on the belief that
+    // bech32_encode() did not bounds-check. It does. The cap only rejected
+    // hrp 41..50, which libngu encodes fine -- a divergence buying nothing.
     char tmp[127];
     if(!segwit_addr_encode(tmp, hrp, witver, prog.buf, prog.len)) {
         mp_raise_ValueError(MP_ERROR_TEXT("segwit_addr_encode"));

@@ -6,9 +6,9 @@ Verified working 2026-08-05 on macOS 27 (arm64), Apple clang, Python 3.14.
 
 ```bash
 make diff        # runs all three harnesses
-# difftest.py    68 cases; must report "0 differ" and "0 error on both"
-# errtest.py     51 cases; 4 intended divergences, 0 unexpected
-# fuzz_codecs.py 427 fuzzed base32 inputs
+# difftest.py    83 cases; must report "0 differ" and "0 error on both"
+# errtest.py     66 cases; 7 intended divergences, 0 unexpected
+# fuzz_codecs.py 474 fuzzed base32 inputs
 ```
 
 These need **both** interpreters built (`unix/coldcard-mpy` and
@@ -17,10 +17,15 @@ is a faithful replacement; `.github/workflows/trezor-backend.yml` runs them on
 every push, along with both ARM firmware builds and a check that no yasmarang
 symbol is linked in.
 
-There are **four** accepted divergences, all listed in errtest.py's
-`EXPECTED_DIVERGENCES` (negative byte count, embedded NUL in base32, an
-ambiguous hardened bit in `derive()`, and `reseed()` being a no-op). The harness fails on any *other* difference, and
-refuses to run at all if the two binaries fail a backend-identity probe.
+There are **seven** accepted divergences, all listed in errtest.py's
+`EXPECTED_DIVERGENCES` (negative byte count, four embedded-NUL base32 cases, an
+ambiguous hardened bit in `derive()`, and `uniform()` at a bound where libngu
+asserts). The harness fails on any *other* difference, and refuses to run at
+all if the two binaries fail a backend-identity probe.
+
+difftest.py's own `KNOWN_DIFFS` is currently **empty** — every value it compares
+is byte-identical. It is kept rather than deleted because an empty allowlist is
+a claim, and it should take a visible diff to stop being true.
 
 ## Smoke test
 

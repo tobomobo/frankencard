@@ -58,6 +58,13 @@ CASES = [
     'ngu.codecs.segwit_decode("bc1" + "q"*200)',  # overlong, bounds check
     'ngu.codecs.segwit_encode("bc", 0, b"\\x00"*5)',   # bad program length
     'ngu.codecs.segwit_encode("x"*60, 0, b"\\x00"*20)',  # overlong hrp
+    # hrp length, either side of bech32's 90-char total. A shim-only cap at 40
+    # used to make 41..50 diverge; these pin the real boundary so it cannot
+    # come back. 50 is the longest hrp that fits: 50 + "1" + 33 + 6 == 90.
+    'ngu.codecs.segwit_encode("x"*40, 0, b"\\x00"*20)',
+    'ngu.codecs.segwit_encode("x"*41, 0, b"\\x00"*20)',
+    'ngu.codecs.segwit_encode("x"*50, 0, b"\\x00"*20)',  # exactly 90: both OK
+    'ngu.codecs.segwit_encode("x"*51, 0, b"\\x00"*20)',  # 91: both reject
     # hdnode -- invalid node access must raise, not crash
     'ngu.hdnode.HDNode().privkey()',
     'ngu.hdnode.HDNode().pubkey()',
@@ -76,6 +83,14 @@ CASES = [
     # ambiguous index: bit 31 set but hard=False. The two backends resolve this
     # to DIFFERENT private keys, so this backend refuses it outright.
     'ngu.hdnode.HDNode().from_master(b"\\x00"*32).derive(0x80000000, False)',
+    # Argument conversion on a VALID node -- a blank HDNode() raises before the
+    # conversion is reached, so these have to derive first to test it at all.
+    # The shim used mp_obj_is_true()/get_int_truncated() here, which accepted a
+    # list as a flag and silently wrapped an out-of-word index.
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).serialize(0, [])',
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).derive(0, [])',
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).serialize(2**64, True)',
+    'ngu.hdnode.HDNode().from_master(b"\\x00"*32).derive(2**64, False)',
     # hardened derive on a public-only node
     '(lambda n: n.derive(0, True))(ngu.hdnode.HDNode().from_chaincode_pubkey('
     'b"\\x00"*32, ngu.secp256k1.keypair(b"\\x01"*32).pubkey().to_bytes()))',
@@ -143,15 +158,6 @@ EXPECTED_DIVERGENCES = {
     'ngu.random.uniform(1<<30)': (
         "AssertionError", "no-raise",
         "libngu asserts bit_length(mx) < 31; unreached (max caller bound 1<<28)"),
-    'ngu.random.reseed(None)': (
-        "TypeError", "no-raise",
-        "shim's reseed no-op also dropped libngu's argument type check"),
-    'ngu.random.reseed("x")': (
-        "TypeError", "no-raise",
-        "shim's reseed no-op also dropped libngu's argument type check"),
-    'ngu.random.reseed([1])': (
-        "TypeError", "no-raise",
-        "shim's reseed no-op also dropped libngu's argument type check"),
 }
 
 

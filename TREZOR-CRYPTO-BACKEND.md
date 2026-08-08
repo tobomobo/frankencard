@@ -84,8 +84,8 @@ trezor-backed interpreters and require identical output:
 
 ```bash
 make diff                                       # builds BOTH, then runs all three
-python3 external/c-modules-trezor/difftest.py   # 80 deterministic cases
-python3 external/c-modules-trezor/errtest.py    # 58 bad-input cases, with an
+python3 external/c-modules-trezor/difftest.py   # 83 deterministic cases
+python3 external/c-modules-trezor/errtest.py    # 66 bad-input cases, with an
                                                 #   allowlist of intended diffs
 python3 external/c-modules-trezor/fuzz_codecs.py  # 474 fuzzed base32 inputs
 ```
@@ -96,7 +96,7 @@ stale build against an equally stale reference and report green.
 
 | Check | Result |
 |---|---|
-| Deterministic crypto, 81 cases | **79 identical, 2 known-differ** |
+| Deterministic crypto, 83 cases | **83 identical, 0 known-differ** |
 | ECDSA signatures, grind counters 0–3 | **byte-identical** (serialized bytes compared, two key/digest pairs) |
 | ECDSA signatures, counters with bit 31 set | **byte-identical** (`-1`, `2**31`, `2**32-1`) |
 | BIP-39 canonical vector (`abandon…about`) | exact |
@@ -135,7 +135,9 @@ Found by differential testing and review:
    backends disagreed on key material.
 4. **`ngu.random.reseed()` is a no-op.** In libngu it *replaced* the PRNG state.
    With a kernel CSPRNG / hardware TRNG there is no state a 32-bit value can
-   improve, so it does nothing. `shared/mk4.py` still calls it.
+   improve, so it does nothing. `shared/mk4.py` still calls it. It does still
+   convert its argument, so it rejects the same non-integers libngu rejected —
+   the no-op was the decision; dropping the type check had been an accident.
 
 Everything else that differed was treated as a bug in this fork and fixed —
 including base32's leniency, which turned out to be load-bearing: `teleport.py`
@@ -268,14 +270,11 @@ correct.)
   Upstream's `82ced47a` added a fault raise to `rng_get_or_fault()` on the same
   path, so this is no longer specific to the fork — but it only raises after
   three failed attempts, so the window is narrower than a bare check would be.
-- **`ngu.random.uniform()` differs on negative and bit-31 bounds.** It casts to
-  `uint32_t` before the `mx <= 1` test, so `uniform(-1)` samples `[0, 2**32)`
-  where libngu returns 0. Callers pass 5, 1000, 2048 and `1<<28`. Separately,
-  libngu asserts `bit_length(mx) < 31`, so it raises `AssertionError` at bounds
-  ≥ `2**30` where this backend returns a value.
-- **`ngu.random.reseed()` accepts any object.** The no-op is deliberate (see
-  above), but it also dropped libngu's argument type check, so `reseed(None)`
-  raises `TypeError` there and silently succeeds here.
+- **`ngu.random.uniform()` returns a value where libngu asserts.** libngu
+  asserts `bit_length(mx) < 31`, so it raises `AssertionError` at bounds
+  ≥ `2**30`. The largest bound any caller passes is `1<<28`. (The other half of
+  this gap — negative and bit-31 bounds sampling `[0, 2**32)` instead of
+  returning 0 — is fixed: the `mx <= 1` test is signed now, as libngu's was.)
 - **Never run on real hardware.**
 - The `keypair` and `ngu.hash.sha512` objects have no finaliser, so key material
   is not wiped on GC. This **matches libngu**, so it was left alone rather than

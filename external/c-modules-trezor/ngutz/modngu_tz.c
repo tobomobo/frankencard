@@ -356,9 +356,15 @@ STATIC mp_obj_t tz_hmac_sha1(mp_obj_t key_in, mp_obj_t msg_in) {
     sha1_Update(&ctx, inner, sizeof(inner));
     sha1_Final(&ctx, out);
 
+    mp_obj_t rv = bytes_from(out, sizeof(out));
+    // Every one of these saw the key: k is the padded key, pad the ipad/opad
+    // block, ctx the hash state over pad, inner the intermediate digest.
     memzero(k, sizeof(k));
     memzero(pad, sizeof(pad));
-    return bytes_from(out, sizeof(out));
+    memzero(&ctx, sizeof(ctx));
+    memzero(inner, sizeof(inner));
+    memzero(out, sizeof(out));
+    return rv;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(tz_hmac_sha1_obj, tz_hmac_sha1);
 
@@ -398,15 +404,18 @@ STATIC mp_obj_t tz_random_uint32(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(tz_random_uint32_obj, tz_random_uint32);
 
 STATIC mp_obj_t tz_random_uniform(mp_obj_t mx_in) {
-    // Truncate to 32 bits FIRST, then test. libngu read this into an `int`, so a
-    // bound of 2**32 became 0 there and returned 0; matching that keeps the
-    // backends in agreement. Testing before the cast instead would pass 0 to
-    // trezor's random_uniform(), which computes 0xFFFFFFFF % 0 and then spins
-    // forever -- verified: ngu.random.uniform(2**32) used to hang.
-    uint32_t mx = (uint32_t)mp_obj_get_int_truncated(mx_in);
+    // Truncate to 32 bits FIRST, then test -- and test SIGNED, exactly as libngu
+    // did (`int mx = mp_obj_get_int_truncated(...); if(mx <= 1) return 0;`).
+    // Matching the signedness matters: a negative bound, or one with bit 31 set,
+    // is <= 1 to libngu and returns 0. Casting to uint32_t before the test made
+    // those sample the whole [0,2**32) range instead.
+    // Testing before the truncation would instead pass 0 to trezor's
+    // random_uniform(), which computes 0xFFFFFFFF % 0 and then spins forever --
+    // verified: ngu.random.uniform(2**32) used to hang.
+    int32_t mx = (int32_t)mp_obj_get_int_truncated(mx_in);
 
     if(mx <= 1) return mp_obj_new_int_from_uint(0);
-    return mp_obj_new_int_from_uint(random_uniform(mx));
+    return mp_obj_new_int_from_uint(random_uniform((uint32_t)mx));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_random_uniform_obj, tz_random_uniform);
 
@@ -416,7 +425,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_random_uniform_obj, tz_random_uniform);
 // value can neither improve nor degrade, so this is intentionally a no-op.
 // Kept because shared/mk4.py:rng_seeding() calls it.
 STATIC mp_obj_t tz_random_reseed(mp_obj_t arg) {
-    (void)arg;
+    // The no-op is the decision; dropping libngu's argument type check was not.
+    // libngu did `yasmarang_pad = mp_obj_get_int_truncated(arg)`, so a non-int
+    // raised TypeError. Keep raising for the same inputs, then discard.
+    (void)mp_obj_get_int_truncated(arg);
     return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(tz_random_reseed_obj, tz_random_reseed);

@@ -81,10 +81,32 @@ jobs:
             VARIANT_DIR="$GITHUB_WORKSPACE/unix/variant-trezor" \
             CC_TOP="$GITHUB_WORKSPACE"
 
-      - name: The vendored trezor-crypto patch must still be exactly the fork
+      # This used to be `patch -p1 --dry-run -R`, which only proved the patch
+      # still reverses -- an extra edit to a file the patch does not touch, or a
+      # whole new file, reverses just as cleanly and went unnoticed. Rebuild the
+      # tree from the pinned upstream instead and require it to match exactly,
+      # so "vendored == upstream + exactly this patch" is checked, not asserted.
+      - name: The vendored trezor-crypto must be pinned upstream + exactly the patch
         run: |
-          cd external/trezor-crypto
-          patch -p1 --dry-run -R < coldcard-changes.patch
+          set -eu
+          PIN=$(sed -n 's/^| Commit | `\(.*\)` |$/\1/p' external/trezor-crypto/VENDOR.md)
+          test -n "$PIN"
+          echo "pinned upstream commit: $PIN"
+
+          git clone --quiet --filter=blob:none --no-checkout \
+              https://github.com/trezor/trezor-firmware /tmp/tc-up
+          git -C /tmp/tc-up sparse-checkout set --no-cone crypto
+          git -C /tmp/tc-up checkout --quiet "$PIN"
+
+          mkdir -p /tmp/recon
+          cp -R /tmp/tc-up/crypto /tmp/recon/crypto
+          # VENDOR.md "What was removed": tests/ (~107 MB of vectors), fuzzer/.
+          rm -rf /tmp/recon/crypto/tests /tmp/recon/crypto/fuzzer
+          ( cd /tmp/recon && patch -p1 --quiet ) \
+              < external/trezor-crypto/coldcard-changes.patch
+
+          # Any difference at all fails: content, mode, added file, deleted file.
+          diff -r /tmp/recon/crypto external/trezor-crypto/crypto
 
       - name: Differential test (deterministic crypto must be byte-identical)
         run: python3 external/c-modules-trezor/difftest.py

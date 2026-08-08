@@ -152,6 +152,13 @@ CASES = [
     '"SAME" if ngu.aes.CBC(False, b"\\x00"*32, b"\\x00"*16).cipher('
     'ngu.aes.CBC(True, b"\\x00"*32, b"\\x00"*16).cipher(b"\\x11"*32)) == b"\\x11"*32 '
     'else "DIFFER"',
+    # ngu.random.uniform() is only deterministic at the bounds libngu treats as
+    # <= 1 -- but there it must be exactly 0, and the shim used to sample all of
+    # [0,2**32) instead. Four draws: a false "True" needs 2**-128, not 2**-32.
+    'str(all(ngu.random.uniform(-1) == 0 for _ in range(4)))',
+    'str(all(ngu.random.uniform(2**31) == 0 for _ in range(4)))',
+    'str(all(ngu.random.uniform(2**32-1) == 0 for _ in range(4)))',
+    'str(all(ngu.random.uniform(2**32) == 0 for _ in range(4)))',
 ]
 
 
@@ -161,17 +168,12 @@ CASES = [
 # each backend. These are open findings, not decisions -- the point is that
 # they cannot change silently, in either direction.
 # ---------------------------------------------------------------------------
+#
+# Currently EMPTY: every value this harness compares is byte-identical. The
+# machinery stays because an empty allowlist is a claim, and it should have to
+# be edited -- visibly, in a diff -- for that claim to stop being true.
+# ---------------------------------------------------------------------------
 KNOWN_DIFFS = {
-    # ngu.random.uniform() casts to uint32 BEFORE the `mx <= 1` test, so a
-    # negative or bit-31 bound becomes a huge unsigned range instead of
-    # libngu's 0. Callers pass 5, 1000, 2048 and 1<<28, so unreachable.
-    # Four draws: a false "True" here needs 2**-128, not 2**-32.
-    'str(all(ngu.random.uniform(-1) == 0 for _ in range(4)))': (
-        "True", "False",
-        "shim samples [0,2**32) where libngu's signed `mx <= 1` returns 0"),
-    'str(all(ngu.random.uniform(2**31) == 0 for _ in range(4)))': (
-        "True", "False",
-        "same: bit-31 bound is negative to libngu, huge unsigned to the shim"),
 }
 CASES = CASES + sorted(KNOWN_DIFFS)
 
