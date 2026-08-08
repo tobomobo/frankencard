@@ -639,7 +639,7 @@ class TrickPinMenu(MenuSystem):
             StoryMenuItem('Just Reboot', "Reboot when this PIN is entered. Doesn't do anything else.", flags=TC_REBOOT),
             StoryMenuItem('Delta Mode', '''\
 Advanced! Logs into REAL seed and allows attacker to do most things, \
-but will produce incorrect signatures when signing PSBT files. \
+but will produce incorrect signatures when signing PSBT files or messages. \
 Wipes seed if they try to do certain actions that might reveal \
 the seed phrase, but still a somewhat riskier mode.
 

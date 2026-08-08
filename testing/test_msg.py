@@ -66,6 +66,79 @@ def test_sign_msg_good(dev, press_select, msg, path, addr_fmt, addr_vs_path):
     assert verify_message(addr, sig, msg.decode("ascii")) is True
 
 
+@pytest.mark.parametrize('deltamode', [False, True])
+def test_sign_msg_deltamode(dev, press_select, set_deltamode, addr_vs_path, deltamode):
+    # Under a Delta Mode PIN we hold the real keys and could sign, but the
+    # signature must be silently wrong -- same as psbt.py does for txns.
+    # The address stays genuine; only the signature is corrupted.
+    # Ported from Coldcard/firmware#702.
+    msg, path = b'hello from delta mode', "m/84h/0h/0h/0/0"
+
+    set_deltamode(deltamode)
+
+    dev.send_recv(CCProtocolPacker.sign_message(msg, path, addr_fmt=AF_CLASSIC), timeout=None)
+    press_select()
+
+    done = None
+    while done == None:
+        time.sleep(0.050)
+        done = dev.send_recv(CCProtocolPacker.get_signed_msg(), timeout=None)
+
+    addr, raw = done
+    sig = str(b64encode(raw), 'ascii').replace('\n', '')
+
+    # real address either way -- a wrong address would give the game away
+    addr_vs_path(addr, path, AF_CLASSIC)
+
+    assert verify_message(addr, sig, msg.decode()) is (not deltamode)
+
+
+def test_sign_msg_deltamode_spares_supplied_privkey(dev, set_deltamode, goto_home,
+                                                    settings_remove, pick_menu_item,
+                                                    cap_story, press_select, need_keypress,
+                                                    microsd_path, cap_menu):
+    # Deliberate divergence from #702's reach, not an oversight: keys handed in
+    # by the caller are already the attacker's. A paper wallet prints its own
+    # WIF in the very file it signs, so corrupting that signature protects
+    # nothing and turns it into a one-step Delta Mode oracle -- verify the sig
+    # against the printed WIF, and a mismatch reveals the PIN was a trick PIN.
+    goto_home()
+    set_deltamode(True)
+
+    pick_menu_item('Advanced/Tools')
+    try:
+        pick_menu_item('Paper Wallets')
+    except:
+        raise pytest.skip('Feature absent')
+
+    press_select()
+    pick_menu_item('GENERATE WALLET')
+
+    time.sleep(0.1)
+    title, story = cap_story()
+    if "Press (1) to save paper wallet file to SD Card" in story:
+        need_keypress("1")
+    time.sleep(0.2)
+    title, story = cap_story()
+    assert 'Created file' in story
+
+    fname = [i for i in story.split('\n') if i][-2]
+    assert fname.endswith('.txt')
+
+    with open(microsd_path(fname), 'r') as f:
+        body = f.read()
+    with open(microsd_path(fname.replace('.txt', '.sig')), 'r') as f:
+        sig_file = f.read()
+
+    addr = body.split('Deposit address:')[1].split('\n\n')[1].strip()
+    sig_msg, sig_addr, sig = parse_signed_message(sig_file)
+
+    # signed with the wallet's own key, the one printed in the file above
+    assert sig_addr == addr
+    assert verify_message(sig_addr, sig, sig_msg) is True, \
+        "paper-wallet signature must stay valid in Delta Mode"
+
+
 def test_sign_msg_refused(dev, press_cancel):
     # user can refuse to sign (cancel)
 
