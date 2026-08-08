@@ -200,10 +200,16 @@ soon.
 | `unix/variant-trezor/` | simulator build variant → `coldcard-mpy-tz` |
 | `stm32/*/c-modules-trezor/` | per-board module dirs for the ARM builds |
 
-Total change to COLDCARD's own firmware sources: **9 files** — three
-`USER_C_MODULES` lines (the swap), three `MICROPY_PY_URANDOM` lines and the
-SECS/CECS check in `rng.c` (both hardening). `COLDCARD_Q1/rng.c` is a symlink to
-the Mk4 file, so Q is covered by the same edit.
+Total change to COLDCARD's own firmware sources: **7 files** — three
+`USER_C_MODULES` lines (the swap), three `MICROPY_PY_URANDOM` lines (hardening),
+and the TRNG fault check in `stm32/COLDCARD/rng.c` (Mk3 only, inert — see
+[Hardware coverage](#hardware-coverage)).
+
+This project added its own TRNG seed/clock-error check to `rng.c` in `8c8d3ba6`;
+upstream arrived at the same fix independently and better in `82ced47a`, so
+`COLDCARD_MK4/rng.c` and `stm32/mk4-bootloader/rng.c` were reset to upstream's
+version and are no longer a divergence. `COLDCARD_Q1/rng.c` is a symlink to the
+Mk4 file, so Q follows it.
 
 ## Building
 
@@ -253,8 +259,9 @@ correct.)
   other scalars at the end of that function. Not fixed, because fixing it
   properly means restructuring trezor's signing routine (an `nlr_push` or a
   pre-fetched entropy pool), which conflicts with keeping the fork minimal.
-  Note this project made the window *slightly wider*: adding the SECS/CECS
-  check below created a new raise path that did not exist before.
+  Upstream's `82ced47a` added a fault raise to `rng_get_or_fault()` on the same
+  path, so this is no longer specific to the fork — but it only raises after
+  three failed attempts, so the window is narrower than a bare check would be.
 - **Never run on real hardware.**
 - The `keypair` and `ngu.hash.sha512` objects have no finaliser, so key material
   is not wiped on GC. This **matches libngu**, so it was left alone rather than
