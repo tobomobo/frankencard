@@ -261,12 +261,35 @@ correct.)
 ## Known gaps
 
 - **A TRNG fault during signing leaks key material onto the stack.** On STM32,
-  `random_buffer()` raises `OSError` when the hardware RNG faults. That is a
+  `random_buffer()` raises `OSError` when the hardware RNG faults
+  (`COLDCARD_MK4/rng.c:217`, and `rng_get_or_fault()` at `:150`). That is a
   MicroPython NLR longjmp, so it unwinds straight out of
   `tc_ecdsa_sign_digest_ex()` and skips the `memzero()` of `k`, `randk` and the
-  other scalars at the end of that function. Not fixed, because fixing it
-  properly means restructuring trezor's signing routine (an `nlr_push` or a
-  pre-fetched entropy pool), which conflicts with keeping the fork minimal.
+  other scalars at the end of that function.
+
+  There are **two** draw sites inside signing, not one, which is what makes this
+  awkward to fix in a small patch:
+
+  | site | what is live |
+  | --- | --- |
+  | `ecdsa.c:725` → `scalar_multiply()` → `curve_to_jacobian()` → `generate_k_random()` | nonce `k`, and the rfc6979 state `rng` (derived from the private key) |
+  | `ecdsa.c:745` `generate_k_random(&randk, ...)` | the above **plus** the private key in `s` |
+
+  So hoisting the `randk` draw to the top of the function does not fix it: the
+  first draw is inside trezor's *generic* scalar multiplication
+  (`point_multiply()` at `:491`, or `:598` under `USE_PRECOMPUTED_CP` — both
+  draw), which every EC operation goes through.
+
+  Worth knowing before costing out a fix: **nothing catches this.** No caller in
+  `shared/` wraps an `ngu.random.*` call in `except OSError`, so the raise is
+  handled nowhere and propagates to the top-level handler. Raising therefore
+  buys nothing that halting would not, while the longjmp is the part that does
+  the damage — which makes "halt instead of raise", exactly what
+  `tc_fault_handler()` already does for the analogous unrecoverable case, the
+  cheapest option on the table. It is not done here because it changes
+  behaviour for every RNG consumer on a file that cannot be tested without
+  hardware.
+
   Upstream's `82ced47a` added a fault raise to `rng_get_or_fault()` on the same
   path, so this is no longer specific to the fork — but it only raises after
   three failed attempts, so the window is narrower than a bare check would be.
