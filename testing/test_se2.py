@@ -925,6 +925,21 @@ def test_deltamode_toggle(get_deltamode, set_deltamode):
     assert get_deltamode() == False
 
 
+def test_deltamode_follows_pin_not_secret(sim_exec, set_deltamode):
+    # SensitiveValues(secret=...) must still know it is Delta Mode.
+    # It didn't, so CCC key C (psbt.sign_it(alternate_secret=...) via
+    # ccc.py sign_psbt) produced VALID signatures for a thug on a duress PIN,
+    # while the main key's signatures were correctly corrupted.
+    code = 'import stash; from pincodes import pa; ' \
+           'sv = stash.SensitiveValues(secret=pa.fetch())\n' \
+           'with sv: RV.write(repr((sv.deltamode, pa.is_deltamode())))'
+
+    assert eval(sim_exec(code)) == (False, False)
+
+    set_deltamode(True)
+    assert eval(sim_exec(code)) == (True, True)
+
+
 # TODO
 # - make trick and do login, check arrives right state?
 # - out of slots
