@@ -148,6 +148,17 @@ def test_upload_long(dev, pkt_len, count=5, data=None):
     # clear screen / test a degerate case
     dev.send_recv(CCProtocolPacker.upload(256, 256, b''))
 
+# Uploads whose final chunk lands on the firmware-header probe at 0x3f00.
+# 0x3f01..0x3f03 leave 1..3 bytes there, which used to blow up unpack_from();
+# 0x3f80 leaves exactly 128, which used to satisfy the header probe and the
+# trailer branch in the same pass. Ported from Coldcard/firmware#703.
+@pytest.mark.parametrize('data_len', [0x3f01, 0x3f02, 0x3f03, 0x3f80])
+def test_upload_at_firmware_probe_boundary(dev, data_len):
+    data = b'psbt\xff' + os.urandom(data_len - 5)
+    dev.upload_file(data)
+    chk = dev.send_recv(CCProtocolPacker.sha256())
+    assert chk == hashlib.sha256(data).digest(), 'bad hash'
+
 def test_upload_fails(dev):
     # incorrect file upload cases
 
