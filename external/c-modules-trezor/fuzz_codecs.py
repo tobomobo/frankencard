@@ -33,6 +33,11 @@ CONFUSED = "018"                # libngu remaps these to O, L, B
 JUNK = "!@#$%^&*()_+=[]{};:'\",.<>/?\\|`~089"
 
 # Inputs where a difference is intentional. See errtest.py for the full rationale.
+#
+# NOTE: this used to be dead. EXPECTED listed "\x00" as the ONE divergence this
+# fuzzer exists to characterise, but no generator below ever emitted a NUL, so
+# the branch never ran and the run reported "0 intended divergences" -- the
+# advertised coverage did not exist. nul_cases() below is the fix.
 EXPECTED = ("\x00",)            # libngu truncates at an embedded NUL
 
 random.seed(1337)
@@ -57,6 +62,24 @@ def corpus():
                            for _ in range(random.randint(0, 20))))
     out += ["", "=", "===", "-", " ", "\t\n", "0", "1", "8", "018", "O", "L", "B",
             "A" * 200, "-" * 50, "A-B C\tD\nE", "aA2-7=", "MZXW6YTBOI"]
+    out += nul_cases()
+    return out
+
+
+def nul_cases():
+    """NUL in every position, always inside OTHERWISE-VALID base32.
+
+    Valid-except-for-the-NUL matters: it is what makes the assertion in main()
+    exact. libngu must always reach its `while (*ptr)` stop and return a
+    successful (possibly truncated) decode, so "libngu raised" is a real
+    failure rather than an artifact of junk elsewhere in the string.
+    """
+    out = ["\x00", "\x00MZXW6YTBOI", "MZXW\x006YTBOI", "MZXW6YTBOI\x00",
+           "\x00\x00", "MZXW\x00\x006YTBOI", "A\x00B"]
+    for _ in range(40):                      # randomised position and length
+        s = "".join(random.choice(B32) for _ in range(random.randint(1, 24)))
+        pos = random.randint(0, len(s))
+        out.append(s[:pos] + "\x00" + s[pos:])
     return out
 
 
@@ -112,7 +135,17 @@ def main():
             if x == y:
                 continue
             if any(e in s for e in EXPECTED):
-                intended += 1
+                # Not merely "a NUL is involved, anything goes": the divergence
+                # has one permitted shape. libngu accepts (truncating at the
+                # NUL), this backend refuses. Both halves are asserted, so
+                # libngu starting to reject -- or this backend starting to
+                # ACCEPT a NUL, which is the case that would matter -- fails.
+                if x.startswith("OK:") and y == "E:ValueError":
+                    intended += 1
+                    continue
+                bad += 1
+                print("  BAD NUL HANDLING %r\n    libngu=%s (want OK:)"
+                      "\n    trezor=%s (want E:ValueError)" % (s, x, y))
                 continue
             bad += 1
             print("  MISMATCH %r\n    libngu=%s\n    trezor=%s" % (s, x, y))

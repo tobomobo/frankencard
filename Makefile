@@ -57,15 +57,23 @@ help:
 	@echo "make sim-start   - start the simulator headless, wait for socket"
 	@echo "make sim-stop    - stop it"
 	@echo "make test        - run the smoke pytest subset (simulator must be up)"
-	@echo "make ci          - diff + build + start + test + stop"
+	@echo "make ci          - build + start + smoke test + stop (does NOT run diff)"
 	@echo ""
 	@echo "BACKEND=tz|libngu         which crypto backend (default: tz)"
 	@echo "PYTEST_ARGS=\"file.py -q\"  run more than the smoke gate (slow)"
 	@echo "See TESTING.md for what this covers and what it does not."
 
 # The differential harnesses need both interpreters and no simulator running.
+#
+# Build both FIRST. Without this the gate happily certifies whatever binaries
+# happen to be lying around: edit the shim, run `make diff`, and it compares the
+# previous build against itself-from-last-week and reports green. The harnesses
+# cannot detect that -- difftest's backend probe proves the two binaries are
+# DIFFERENT builds, not that either one is CURRENT.
 .PHONY: diff
 diff:
+	@$(MAKE) build BACKEND=libngu
+	@$(MAKE) build BACKEND=tz
 	python3 external/c-modules-trezor/difftest.py
 	python3 external/c-modules-trezor/errtest.py
 	python3 external/c-modules-trezor/fuzz_codecs.py
