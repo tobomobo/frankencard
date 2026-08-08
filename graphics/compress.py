@@ -82,10 +82,12 @@ def make_icons():
     MAX_HEIGHT = 14
 
     # PROBLEM: this file costs money... altho free version looks okay too
+    # - the Free Solid face has the same codepoints for the few glyphs we use
+    #   (battery f240-f244, plug f1e6); only the drawing style differs
     try:
         awesome = ImageFont.truetype(FONT_PATH + 'Font Awesome 6 Sharp-Regular-400.otf', ICON_SIZE)
-    except:
-        raise
+    except OSError:
+        awesome = ImageFont.truetype(FONT_PATH + 'Font Awesome 6 Free-Solid-900.otf', ICON_SIZE)
 
     # use a bitmap font for best readability
     sm_font = ImageFont.load('ter-powerline-x12b.pil')
