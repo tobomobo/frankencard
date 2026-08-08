@@ -821,7 +821,16 @@ class USBHandler:
             #   length and appends hdr, but that's kinda a bug, so support both
             is_trailer = (pos == (total_size - FW_HEADER_SIZE) or pos == total_size)
 
-            if pos == (FW_HEADER_OFFSET & ~255):
+            # ... but only when the whole header is inside this chunk. A short
+            # final chunk here leaves here[-128:] pointing at up to 128 bytes
+            # of ordinary file data, and any upload -- PSBT, multisig config,
+            # backup -- can land that way:
+            #  - total_size 0x3f01..0x3f03 gives 1..3 bytes, so the unpack_from
+            #    below raises "buffer too small" and the upload always fails.
+            #  - total_size 0x3f80 satisfies this probe and is_trailer in the
+            #    same pass, so a file whose last 128 bytes happen to look like
+            #    a header walks straight into authorize_upgrade().
+            if pos == (FW_HEADER_OFFSET & ~255) and len(here) == 256:
                 hdr = memoryview(here)[-128:]
                 magic, = unpack_from('<I', hdr[0:4])
                 if magic == FW_HEADER_MAGIC:
