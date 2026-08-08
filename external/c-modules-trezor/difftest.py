@@ -124,6 +124,16 @@ CASES = [
     # the counter must actually reach the nonce: different counter, different sig
     '"DISTINCT" if len({ngu.secp256k1.sign(b"\\x03"*32, '
     'ngu.hash.sha256s(b"m"), c).to_bytes() for c in range(4)}) == 4 else "COLLIDED"',
+    # counters whose truncated 32-bit value has bit 31 set. Both backends take
+    # the raw word as RFC6979 extra entropy, so these must be byte-identical to
+    # each other and distinct from the counter-0 signature. The shim used to
+    # clamp a negative counter to 0, which collapsed all three onto counter 0.
+    'H(ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), -1).to_bytes())',
+    'H(ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), 2**31).to_bytes())',
+    'H(ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), 2**32-1).to_bytes())',
+    '"COLLAPSED" if ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), -1)'
+    '.to_bytes() == ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), 0)'
+    '.to_bytes() else "DISTINCT"',
     # --- aes ---
     'H(ngu.aes.CTR(b"\\x00"*32).cipher(b"hello world"))',
     'H(ngu.aes.CTR(b"\\x00"*32, b"\\x01"*16).cipher(b"hello world"))',
@@ -150,32 +160,8 @@ CASES = [
 # Cases that DO differ today, recorded with the exact outcome expected from
 # each backend. These are open findings, not decisions -- the point is that
 # they cannot change silently, in either direction.
-#
-# Stated as a relation rather than a hex constant, because the relation IS the
-# finding: mod_secp256k1_tz.c's `if(counter < 0) counter = 0;` has no
-# counterpart in libngu's k1.c, so every counter whose truncated 32-bit value
-# has bit 31 set collapses onto nonce_ptr=NULL -- i.e. produces the counter-0
-# signature. libngu instead passes the raw word through as RFC6979 extra
-# entropy and gets a distinct signature.
-#
-# Not reachable from firmware: psbt.py's ecdsa_grind_sign only ever counts up
-# from 0. Removing the clamp restores exact parity and is a one-line change;
-# it is deliberately NOT part of this commit, which changes no shim code.
 # ---------------------------------------------------------------------------
-SIGN_AT = ('ngu.secp256k1.sign(b"\\x03"*32, ngu.hash.sha256s(b"m"), %s).to_bytes()')
-_COLLAPSE = ('"COLLAPSED" if %s == %s else "DISTINCT"'
-             % (SIGN_AT % "%s", SIGN_AT % "0"))
-
 KNOWN_DIFFS = {
-    _COLLAPSE % "-1": (
-        "DISTINCT", "COLLAPSED",
-        "shim clamps a negative counter to 0; libngu passes 0xFFFFFFFF through"),
-    _COLLAPSE % "2**31": (
-        "DISTINCT", "COLLAPSED",
-        "shim clamps a bit-31 counter to 0; libngu passes 0x80000000 through"),
-    _COLLAPSE % "2**32-1": (
-        "DISTINCT", "COLLAPSED",
-        "truncates to -1 in both; only the shim then clamps it to 0"),
     # ngu.random.uniform() casts to uint32 BEFORE the `mx <= 1` test, so a
     # negative or bit-31 bound becomes a huge unsigned range instead of
     # libngu's 0. Callers pass 5, 1000, 2048 and 1<<28, so unreachable.
