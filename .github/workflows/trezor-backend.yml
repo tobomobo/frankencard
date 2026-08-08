@@ -53,10 +53,19 @@ jobs:
           ./ENV/bin/pip install -q -U pip
           ./ENV/bin/pip install -q pysdl2 pillow
 
-      - name: One-time setup (libngu secp256k1 precompute)
+      # Not `make setup`: that target chains into `make tools`, which builds a
+      # vanilla micropython nothing here uses (unix/simulator.py's MPY_UNIX
+      # constant is dead) and whose bundled-libffi autoreconf fails on modern
+      # autoconf. The simulator itself uses system libffi (MICROPY_STANDALONE=0)
+      # and, of micropython's lib/ submodules, only berkeley-db (MICROPY_PY_BTREE).
+      - name: One-time setup (symlinks, btree, libngu secp256k1 precompute)
         run: |
           cd unix
-          make setup
+          ln -sfn ../external/micropython/ports/unix l-port
+          ln -sfn ../external/micropython l-mpy
+          ln -sfn ../external/micropython/ports/unix/coldcard-mpy coldcard-mpy
+          git -C ../external/micropython submodule update --init --depth 1 \
+            lib/berkeley-db-1.xx
           make ngu-setup
 
       # The reference: libngu-backed interpreter.
@@ -102,13 +111,17 @@ jobs:
         with:
           release: '13.2.Rel1'
 
+      # ckcc-protocol is needed because shared/manifest.py freezes
+      # public_constants.py, a symlink into it. No stm32/mk4-bootloader/hal:
+      # .gitmodules still lists it (stale upstream entry), but the gitlink was
+      # removed in upstream c65656eb and the HAL sources are vendored flat.
       - name: Submodules
         run: |
           git submodule update --init --depth 1 \
-            external/micropython external/libngu external/mpy-qr
+            external/micropython external/libngu external/mpy-qr \
+            external/ckcc-protocol
           git -C external/libngu submodule update --init --depth 1 \
             libs/cifra libs/secp256k1
-          git submodule update --init --depth 1 stm32/mk4-bootloader/hal
 
       - name: Build mpy-cross
         run: make -C external/micropython/mpy-cross CFLAGS_EXTRA="-Wno-error"
