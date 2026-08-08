@@ -85,20 +85,50 @@ def test_bip322_por(msg, ins, bip322_txn, start_sign, end_sign, cap_story, need_
     press_cancel()
 
 
-def test_bip322_por_utf8_msg(bip322_txn, start_sign, end_sign, cap_story, press_select,
-                             bip322_verify):
-    msg = "UTF-8 support: öäüéàè - test text".encode()
+@pytest.mark.parametrize("msg, why", [
+    ("UTF-8 support: öäüéàè - test text".encode(), "non-ascii"),
+    (b"\x01fake title",             "OUT_CTRL_TITLE"),
+    (b"\x02looks like an address",  "OUT_CTRL_ADDRESS"),
+    (b"visible\n\x03" + b"A"*100,   "OUT_CTRL_NOWRAP hides the tail"),
+    (b"bell\x07",                   "control char"),
+])
+def test_bip322_por_unshowable_msg(msg, why, bip322_txn, start_sign, cap_story):
+    # Anything the story renderer treats as in-band markup is signed but not
+    # faithfully drawn, so it must be refused rather than warned about. The
+    # old warning tested len(s) != len(s.encode()), which is False for every
+    # one-byte control char -- it caught only the first case here.
+    psbt, _ = bip322_txn([["p2wpkh", None, None]], msg=msg)
+
+    start_sign(psbt, finalize=True)
+    title, story = cap_story()
+    assert title == "Failure", why
+    assert "must be ascii printable" in story, why
+
+
+def test_bip322_por_tab_newline_msg(bip322_txn, start_sign, end_sign, cap_story,
+                                    bip322_verify):
+    # tab and newline are legitimate formatting in a reserves statement
+    msg = b"I attest to holding:\n\tone (1) bitcoin"
     psbt, _ = bip322_txn([["p2wpkh", None, None]], msg=msg)
 
     start_sign(psbt, finalize=True)
     title, story = cap_story()
     assert title == "OK TO SIGN?"
-    assert "BIP-322 Message" in story
-    assert "Proof of Reserves" not in story
-    assert msg.decode() in story
-    assert "WARNING" in story
-    assert "non-ASCII characters" in story
-    assert "Message Hash:" not in story
+    signed = end_sign(accept=True)
+    bip322_verify(signed)
+
+
+def test_bip322_por_verifier_whitespace_ok(bip322_txn, start_sign, end_sign, cap_story,
+                                           bip322_verify):
+    # Deliberately looser than Coldcard/firmware#710: this text is chosen by
+    # the verifier, not typed on the device, so their formatting must not be a
+    # reason to refuse a proof. Upstream's rules would reject all of this.
+    msg = b" leading, trailing and   tripled spaces "
+    psbt, _ = bip322_txn([["p2wpkh", None, None]], msg=msg)
+
+    start_sign(psbt, finalize=True)
+    title, story = cap_story()
+    assert title == "OK TO SIGN?"
     signed = end_sign(accept=True)
     bip322_verify(signed)
 

@@ -5,7 +5,7 @@
 import stash, gc, history, sys, ngu, ckcc, chains
 from ustruct import unpack_from, unpack, pack
 from ubinascii import hexlify as b2a_hex
-from utils import xfp2str, B2A, keypath_to_str
+from utils import xfp2str, B2A, keypath_to_str, to_ascii_printable
 from utils import seconds2human_readable, datetime_from_timestamp, datetime_to_str, node_from_privkey
 from chains import NLOCK_IS_TIME
 from uhashlib import sha256
@@ -1533,11 +1533,29 @@ class psbtObject(psbtProxy):
 
         if self.por322:
             assert len(self.por322_msg) <= 330, "msg len"
-            if len(self.por322_msg) != len(self.por322_msg.encode()):
-                self.warnings.append((
-                    "Message",
-                    "Message contains non-ASCII characters that may not be readable on this screen."
-                ))
+
+            # Reject what the screen silently restructures. charcodes.py gives
+            # \x01 \x02 \x03 in-band meaning in a story: title line, payment
+            # address, and do-not-wrap. word_wrap() acts on them at the START
+            # of a line, so a message can put "\n\x03" ahead of a long run and
+            # ux.py hands draw_story an over-wide line, which clips at 34 cells
+            # on Q1 and 128px on Mk4 -- the tail is signed but never drawn.
+            # \x01 is worse on Mk4: title lines advance y by 21 instead of 13,
+            # so later lines fall off the 64px display.
+            # The old warning could not catch any of this: it tested
+            # len(s) != len(s.encode()), which is False for every one-byte
+            # control char. Tab and newline are legitimate here and stay.
+            # Deliberately NOT the full validate_text_for_signing() that
+            # Coldcard/firmware#710 uses -- its leading/trailing-space,
+            # three-space and 2-char-minimum rules are UX guards for text the
+            # *user* typed. This text comes from the verifier, so rejecting
+            # their formatting would break proofs we ought to sign. Those rules
+            # also do not buy the property they look like they buy: two spaces
+            # pass, and a trailing "\t" or "\n" sidesteps the trailing-space
+            # check. This does not make displayed == signed -- a space consumed
+            # at a wrap point is still invisible, and Q1 draws \t as a keycap
+            # glyph. Closing that gap is display-side work, not input rules.
+            to_ascii_printable(self.por322_msg, allow_tab_nl=True)
 
         if self.txn_version == 0:
             # only allow txn version 0 for Proof of Reserves txn (BIP-322)
